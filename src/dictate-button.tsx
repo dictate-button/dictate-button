@@ -2,6 +2,8 @@ import { customElement } from 'solid-element'
 import { createSignal } from 'solid-js'
 import { btnDictateStyles } from './dictate-button.styles'
 
+console.debug('dictate-button version:', __APP_VERSION__)
+
 export interface BtnDictateProps {
   size?: number
   apiEndpoint?: string

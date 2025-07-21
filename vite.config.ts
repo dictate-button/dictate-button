@@ -2,8 +2,12 @@ import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import solidPlugin from "vite-plugin-solid";
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+import pkg from './package.json'
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     solidPlugin(),
     dts({
