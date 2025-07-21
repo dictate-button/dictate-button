@@ -4,7 +4,7 @@ const WATCH_DOM_CHANGES = true
 
 export function injectDictateButton() {
   const textFields = document.querySelectorAll(
-    'textarea[data-btn-dictate-target]:not([data-btn-dictate-enabled]), input[type="text"][data-btn-dictate-target]:not([data-btn-dictate-enabled])'
+    'textarea[data-dictate-button-target]:not([data-dictate-button-enabled]), input[type="text"][data-dictate-button-target]:not([data-dictate-button-enabled])'
   )
 
   for (const textField of textFields) {
@@ -16,7 +16,7 @@ export function injectDictateButton() {
     container.style.color = 'inherit'
     textField.parentNode.insertBefore(container, textField)
 
-    textField.setAttribute('data-btn-dictate-enabled', '')
+    textField.setAttribute('data-dictate-button-enabled', '')
 
     container.appendChild(textField)
 
@@ -24,15 +24,15 @@ export function injectDictateButton() {
     textField.style.boxSizing = 'border-box'
     // textarea.style.paddingRight = `${BUTTONS_SIZE + 2 * 2 + 6}px`
 
-    // Add the btn-dictate component.
-    const dictateBtn = document.createElement('btn-dictate')
+    // Add the dictate-button component.
+    const dictateBtn = document.createElement('dictate-button')
     dictateBtn.size = BUTTONS_SIZE
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
     dictateBtn.style.top = '0'
     dictateBtn.apiEndpoint = API_ENDPOINT
 
-    // Add event listeners for the btn-dictate component.
+    // Add event listeners for the dictate-button component.
     dictateBtn.addEventListener('started', (e) => {
       console.log('started', e)
     })

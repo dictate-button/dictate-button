@@ -1,6 +1,6 @@
 import { customElement } from 'solid-element'
 import { createSignal } from 'solid-js'
-import { btnDictateStyles } from './btn-dictate.styles'
+import { btnDictateStyles } from './dictate-button.styles'
 
 export interface BtnDictateProps {
   size?: number
@@ -13,7 +13,7 @@ export interface BtnDictateProps {
 declare module 'solid-js' {
   namespace JSX {
     interface IntrinsicElements {
-      'btn-dictate': BtnDictateProps
+      'dictate-button': BtnDictateProps
     }
   }
 }
@@ -21,10 +21,10 @@ declare module 'solid-js' {
 type BtnDictateStatus = 'idle' | 'recording' | 'processing' | 'error'
 
 const DEFAULT_TRANSCRIBE_API_ENDPOINT = 'http://localhost:3000/transcribe'
-const APP_NAME = 'btn-dictate.io'
+const APP_NAME = 'dictate-button.io'
 
 customElement(
-  'btn-dictate',
+  'dictate-button',
   {
     size: 24,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
@@ -118,12 +118,12 @@ customElement(
     }
 
     return (
-      <div part="container" class="btn-dictate__container">
+      <div part="container" class="dictate-button__container">
         <style>{btnDictateStyles}</style>
         <button
           part="button"
           style={`width:${size}px;height:${size}px"`}
-          class="btn-dictate__button"
+          class="dictate-button__button"
           onClick={toggleRecording}
           title={buttonTitle(status())}
         >
@@ -164,7 +164,7 @@ const IdleIcon = () => (
   <svg
     // @ts-ignore
     part="icon"
-    class={`btn-dictate__icon btn-dictate__icon--idle`}
+    class={`dictate-button__icon dictate-button__icon--idle`}
     fill="none"
     viewBox="0 0 24 24"
     stroke-width="1.5"
@@ -182,7 +182,7 @@ const RecordingIcon = () => (
   <svg
     // @ts-ignore
     part="icon"
-    class="btn-dictate__icon btn-dictate__icon--recording"
+    class="dictate-button__icon dictate-button__icon--recording"
     viewBox="0 0 24 24"
     fill="currentColor"
   >
@@ -198,7 +198,7 @@ const ProcessingIcon = () => (
   <svg
     // @ts-ignore
     part="icon"
-    class="btn-dictate__icon btn-dictate__icon--processing"
+    class="dictate-button__icon dictate-button__icon--processing"
     fill="none"
     viewBox="0 0 24 24"
     stroke-width="1.5"
@@ -216,7 +216,7 @@ const ErrorIcon = () => (
   <svg
     // @ts-ignore
     part="icon"
-    class="btn-dictate__icon btn-dictate__icon--error"
+    class="dictate-button__icon dictate-button__icon--error"
     fill="none"
     viewBox="0 0 24 24"
     stroke-width="1.5"

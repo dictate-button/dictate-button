@@ -1,16 +1,16 @@
 {
   "private": true,
-  "name": "btn-dictate",
+  "name": "dictate-button",
   "version": "0.1.0",
-  "description": "Dictation button web component",
-  "main": "dist/btn-dictate.cjs.js",
-  "module": "dist/btn-dictate.es.js",
-  "types": "dist/btn-dictate.d.ts",
+  "description": "Dictate button web component",
+  "main": "dist/dictate-button.cjs.js",
+  "module": "dist/dictate-button.es.js",
+  "types": "dist/dictate-button.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/btn-dictate.d.ts",
-      "import": "./dist/btn-dictate.es.js",
-      "require": "./dist/btn-dictate.cjs.js"
+      "types": "./dist/dictate-button.d.ts",
+      "import": "./dist/dictate-button.es.js",
+      "require": "./dist/dictate-button.cjs.js"
     },
     "./inject": {
       "import": "./dist/inject.es.js",

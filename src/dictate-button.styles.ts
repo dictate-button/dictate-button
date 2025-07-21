@@ -6,11 +6,11 @@ export const btnDictateStyles = `
   color-scheme: only light;
 }
 
-:host .btn-dictate__container {
+:host .dictate-button__container {
   margin: 5px;
 }
 
-:host .btn-dictate__button {
+:host .dictate-button__button {
   cursor: pointer;
   padding: 2px;
   display: inline-flex;
@@ -20,16 +20,16 @@ export const btnDictateStyles = `
   transition: opacity 0.2s ease-in-out;
 }
 
-:host .btn-dictate__button .btn-dictate__icon {
+:host .dictate-button__button .dictate-button__icon {
   width: 100%;
   height: 100%;
 }
 
-:host .btn-dictate__button .btn-dictate__icon.btn-dictate__icon--processing {
-  animation: btn-dictate-rotate 1s linear infinite;
+:host .dictate-button__button .dictate-button__icon.dictate-button__icon--processing {
+  animation: dictate-button-rotate 1s linear infinite;
 }
 
-@keyframes btn-dictate-rotate {
+@keyframes dictate-button-rotate {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }

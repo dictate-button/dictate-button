@@ -12,7 +12,7 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
-        "btn-dictate": "src/btn-dictate.tsx",
+        "dictate-button": "src/dictate-button.tsx",
         "inject": "src/inject.js"
       },
       formats: ["es", "cjs"],
