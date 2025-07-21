@@ -19,7 +19,8 @@
   },
   "scripts": {
     "build": "vite build",
-    "format": "prettier --write './src/**/*.{js,jsx,ts,tsx}'"
+    "format": "prettier --write './src/**/*.{js,jsx,ts,tsx}'",
+    "prepare": "pnpm run build"
   },
   "dependencies": {
     "solid-element": "^1.9.1",
