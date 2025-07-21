@@ -1,4 +1,4 @@
-# Dictate Button
+# Dictate Button (Web Component)
 
 A customizable web component that adds speech-to-text dictation capabilities to any text input or textarea field on your website.
 
