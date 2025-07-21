@@ -71,7 +71,7 @@ dictateButton.addEventListener('transcribed', (event) => {
 | size          | number  | 24                                      | Size of the button in pixels           |
 | apiEndpoint   | string  | https://api.dictate-button.io/transcribe| API endpoint for transcription service |
 | theme         | string  | (inherits from page)                    | 'light' or 'dark'                      |
-| class         | string  |                                         | Custom class to manage it better       |
+| class         | string  |                                         | Custom CSS class                       |
 
 ## Styling
 
