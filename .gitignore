@@ -132,7 +132,5 @@ dist
 # test artifacts
 test-results/
 
-# Project-specific
-/models
-/audios
-/whisper.cpp
+# Firebase.
+.firebase/
