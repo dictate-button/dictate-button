@@ -22,7 +22,7 @@ declare module 'solid-js' {
 
 type BtnDictateStatus = 'idle' | 'recording' | 'processing' | 'error'
 
-const DEFAULT_TRANSCRIBE_API_ENDPOINT = 'http://localhost:3000/transcribe'
+const DEFAULT_TRANSCRIBE_API_ENDPOINT = 'https://api.dictate-button.io/transcribe'
 const APP_NAME = 'dictate-button.io'
 
 customElement(
