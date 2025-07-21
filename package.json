@@ -1,0 +1,35 @@
+{
+  "private": true,
+  "name": "btn-dictate",
+  "version": "0.1.0",
+  "description": "Dictation button web component",
+  "main": "dist/btn-dictate.cjs.js",
+  "module": "dist/btn-dictate.es.js",
+  "types": "dist/btn-dictate.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/btn-dictate.d.ts",
+      "import": "./dist/btn-dictate.es.js",
+      "require": "./dist/btn-dictate.cjs.js"
+    },
+    "./inject": {
+      "import": "./dist/inject.es.js",
+      "require": "./dist/inject.cjs.js"
+    }
+  },
+  "scripts": {
+    "build": "vite build",
+    "format": "prettier --write './src/**/*.{js,jsx,ts,tsx}'"
+  },
+  "dependencies": {
+    "solid-element": "^1.9.1",
+    "solid-js": "^1.9.7"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "typescript": "^5.8.3",
+    "vite": "^7.0.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-solid": "^2.11.7"
+  }
+}
