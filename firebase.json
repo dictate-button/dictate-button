@@ -1,7 +1,7 @@
 {
   "hosting": {
     "predeploy": [
-      "pnpm build"
+      "pnpm run build"
     ],
     "public": "dist",
     "ignore": [
