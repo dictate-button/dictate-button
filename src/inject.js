@@ -1,4 +1,3 @@
-const API_ENDPOINT = `http://localhost:3000/transcribe`
 const BUTTONS_SIZE = 24 // px
 const WATCH_DOM_CHANGES = true
 
@@ -30,7 +29,6 @@ export function injectDictateButton() {
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
     dictateBtn.style.top = '0'
-    dictateBtn.apiEndpoint = API_ENDPOINT
 
     // Add event listeners for the dictate-button component.
     dictateBtn.addEventListener('started', (e) => {
