@@ -34,14 +34,14 @@ export function injectDictateButton() {
     dictateBtn.addEventListener('started', (e) => {
       console.log('started', e)
     })
-    dictateBtn.addEventListener('transcribed', (e) => {
-      console.log('transcribed', e)
+    dictateBtn.addEventListener('completed', (e) => {
+      console.log('completed', e)
       const customEvent = e
       const text = customEvent.detail
       receiveText(textField, text)
     })
-    dictateBtn.addEventListener('stopped', (e) => {
-      console.log('stopped', e)
+    dictateBtn.addEventListener('cancelled', (e) => {
+      console.log('cancelled', e)
     })
     dictateBtn.addEventListener('error', (e) => {
       console.log('error', e)

@@ -63,10 +63,10 @@ import 'dictate-button/inject'
 
 The dictate-button component emits the following events:
 
-- `started`: Fired when recording begins
-- `stopped`: Fired when recording stops
-- `transcribed`: Fired when transcription is complete. The event detail contains the transcribed text.
-- `error`: Fired when an error occurs during recording or transcription
+- `started`: Fired when recording begins.
+- `cancelled`: Fired when recording is cancelled by the user.
+- `completed`: Fired when transcribing is complete. The event detail contains the transcribed text.
+- `error`: Fired when an error occurs during recording or transcribing.
 
 Example event handling:
 

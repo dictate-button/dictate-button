@@ -34,7 +34,7 @@ customElement(
   (props: BtnDictateProps, { element }) => {
     const { size, apiEndpoint } = props
 
-    console.log('api', apiEndpoint)
+    console.debug('api', apiEndpoint)
 
     const [status, setStatus] = createSignal<BtnDictateStatus>('idle')
 
@@ -80,10 +80,10 @@ customElement(
 
               const data = await response.json()
 
-              // If use cancelled processing, don't emit transcribed event.
+              // If user cancelled processing, don't emit completed event.
               if (status() !== 'processing') return
 
-              event(element, 'transcribed', data.text)
+              event(element, 'completed', data.text)
 
               setStatus('idle')
             } catch (error) {
@@ -108,7 +108,7 @@ customElement(
           setErrorStatus()
         }
       } else {
-        event(element, 'stopped', 'Stopped recording')
+        event(element, 'cancelled', 'Cancelled recording')
 
         setStatus('idle')
       }
