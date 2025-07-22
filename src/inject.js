@@ -31,21 +31,29 @@ export function injectDictateButton() {
     dictateBtn.style.top = '0'
 
     // Add event listeners for the dictate-button component.
-    dictateBtn.addEventListener('started', (e) => {
-      console.log('started', e)
+    dictateBtn.addEventListener('recording-started', (e) => {
+      console.log('recording-started', e)
     })
-    dictateBtn.addEventListener('completed', (e) => {
-      console.log('completed', e)
+    dictateBtn.addEventListener('recording-stopped', (e) => {
+      console.log('recording-stopped', e)
+    })
+    dictateBtn.addEventListener('recording-error', (e) => {
+      console.log('recording-error', e)
+    })
+
+    dictateBtn.addEventListener('transcribing-started', (e) => {
+      console.log('transcribing-started', e)
+    })
+
+    dictateBtn.addEventListener('transcribing-finished', (e) => {
+      console.log('transcribing-finished', e)
       const customEvent = e
       const text = customEvent.detail
       receiveText(textField, text)
     })
-    dictateBtn.addEventListener('cancelled', (e) => {
-      console.log('cancelled', e)
-    })
-    dictateBtn.addEventListener('error', (e) => {
-      console.log('error', e)
-    })
+     dictateBtn.addEventListener('transcribing-error', (e) => {
+       console.log('transcribing-error', e)
+     })
 
     container.appendChild(dictateBtn)
   }
