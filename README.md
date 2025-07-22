@@ -15,7 +15,9 @@ A customizable web component that adds speech-to-text dictation capabilities to 
 
 ## Usage
 
-### Option 1: Using the auto-inject script (recommended)
+### From CDN
+
+#### Option 1: Using the auto-inject script
 
 Include the inject script in your HTML:
 
@@ -31,7 +33,7 @@ Add the `data-dictate-button-target` attribute to any textarea or text input whe
 <input type="text" data-dictate-button-target />
 ```
 
-### Option 2: Manual integration
+#### Option 2: Manual integration
 
 Import the component and use it directly in your code:
 
@@ -39,6 +41,22 @@ Import the component and use it directly in your code:
 <script type="module" src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
 
 <dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe"></dictate-button>
+```
+
+### As NPM package
+
+Import it once for your app:
+
+The button component:
+
+```js
+import 'dictate-button'
+```
+
+The auto-inject script:
+
+```js
+import 'dictate-button/inject'
 ```
 
 ## Events
