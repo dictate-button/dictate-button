@@ -75,7 +75,7 @@ Example event handling:
 ```javascript
 const dictateButton = document.querySelector('dictate-button');
 
-dictateButton.addEventListener('transcribed', (event) => {
+dictateButton.addEventListener('transcribing-finished', (event) => {
   const transcribedText = event.detail;
   console.log('Transcribed text:', transcribedText);
   
