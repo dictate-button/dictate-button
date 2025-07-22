@@ -63,19 +63,19 @@ import 'dictate-button/inject'
 
 The dictate-button component emits the following events:
 
-- `recording-started`: Fired when user starts recording.
-- `recording-stopped`: Fired when user stops recording.
-- `recording-error`: Fired when an error occurs during recording.
-- `transcribing-started`: Fired when transcribing is started.
-- `transcribing-finished`: Fired when transcribing is complete. The event detail contains the transcribed text.
-- `transcribing-error`: Fired when an error occurs during transcribing.
+- `recording:started`: Fired when user starts recording.
+- `recording:stopped`: Fired when user stops recording.
+- `recording:error`: Fired when an error occurs during recording.
+- `transcribing:started`: Fired when transcribing is started.
+- `transcribing:finished`: Fired when transcribing is complete. The event detail contains the transcribed text.
+- `transcribing:error`: Fired when an error occurs during transcribing.
 
 Example event handling:
 
 ```javascript
 const dictateButton = document.querySelector('dictate-button');
 
-dictateButton.addEventListener('transcribing-finished', (event) => {
+dictateButton.addEventListener('transcribing:finished', (event) => {
   const transcribedText = event.detail;
   console.log('Transcribed text:', transcribedText);
   

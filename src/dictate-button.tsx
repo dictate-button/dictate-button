@@ -68,7 +68,7 @@ customElement(
           mediaRecorder.onstop = async () => {
             setStatus('processing')
 
-            event(element, 'transcribing-started', 'Started transcribing')
+            event(element, 'transcribing:started', 'Started transcribing')
 
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
 
@@ -82,16 +82,16 @@ customElement(
 
               const data = await response.json()
 
-              // If user cancelled processing, don't emit transcribing-finished event.
+              // If user cancelled processing, don't emit transcribing:finished event.
               if (status() !== 'processing') return
 
-              event(element, 'transcribing-finished', data.text)
+              event(element, 'transcribing:finished', data.text)
 
               setStatus('idle')
             } catch (error) {
               console.error('Failed to transcribe audio:', error)
 
-              event(element, 'transcribing-error', 'Failed to transcribe audio')
+              event(element, 'transcribing:error', 'Failed to transcribe audio')
 
               setErrorStatus()
             }
@@ -99,18 +99,18 @@ customElement(
 
           mediaRecorder.start()
 
-          event(element, 'recording-started', 'recording-started recording')
+          event(element, 'recording:started', 'Started recording')
 
           setStatus('recording')
         } catch (error) {
           console.error('Failed to start recording:', error)
 
-          event(element, 'recording-error', 'Failed to start recording')
+          event(element, 'recording:error', 'Failed to start recording')
 
           setErrorStatus()
         }
       } else {
-        event(element, 'recording-stopped', 'Stopped recording')
+        event(element, 'recording:stopped', 'Stopped recording')
 
         setStatus('idle')
       }
