@@ -92,7 +92,11 @@ customElement(
             } catch (error) {
               console.error('Failed to transcribe audio:', error)
 
-              event(element, 'transcribing:error', 'Failed to transcribe audio')
+              event(
+                element,
+                'transcribing:failed',
+                'Failed to transcribe audio'
+              )
 
               setErrorStatus()
             }
@@ -106,7 +110,7 @@ customElement(
         } catch (error) {
           console.error('Failed to start recording:', error)
 
-          event(element, 'recording:error', 'Failed to start recording')
+          event(element, 'recording:failed', 'Failed to start recording')
 
           setErrorStatus()
         }

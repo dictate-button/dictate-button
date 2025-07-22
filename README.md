@@ -65,10 +65,10 @@ The dictate-button component emits the following events:
 
 - `recording:started`: Fired when user starts recording.
 - `recording:stopped`: Fired when user stops recording.
-- `recording:error`: Fired when an error occurs during recording.
+- `recording:failed`: Fired when an error occurs during recording.
 - `transcribing:started`: Fired when transcribing is started.
 - `transcribing:finished`: Fired when transcribing is complete. The event detail contains the transcribed text.
-- `transcribing:error`: Fired when an error occurs during transcribing.
+- `transcribing:failed`: Fired when an error occurs during transcribing.
 
 Example event handling:
 

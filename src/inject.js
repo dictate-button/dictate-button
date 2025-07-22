@@ -37,8 +37,8 @@ export function injectDictateButton() {
     dictateBtn.addEventListener('recording:stopped', (e) => {
       console.log('recording:stopped', e)
     })
-    dictateBtn.addEventListener('recording:error', (e) => {
-      console.log('recording:error', e)
+    dictateBtn.addEventListener('recording:failed', (e) => {
+      console.log('recording:failed', e)
     })
 
     dictateBtn.addEventListener('transcribing:started', (e) => {
@@ -51,8 +51,8 @@ export function injectDictateButton() {
       const text = customEvent.detail
       receiveText(textField, text)
     })
-    dictateBtn.addEventListener('transcribing:error', (e) => {
-      console.log('transcribing:error', e)
+    dictateBtn.addEventListener('transcribing:failed', (e) => {
+      console.log('transcribing:failed', e)
     })
 
     container.appendChild(dictateBtn)
