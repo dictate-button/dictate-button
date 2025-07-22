@@ -22,8 +22,8 @@ A customizable web component that adds speech-to-text dictation capabilities to 
 Include the inject script in your HTML:
 
 ```html
-<script type="module" src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
-<script type="module" src="https://cdn.dictate-button.io/inject.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject.es.js"></script>
 ```
 
 Add the `data-dictate-button-target` attribute to any textarea or text input where you want the dictate button to appear:
@@ -38,7 +38,7 @@ Add the `data-dictate-button-target` attribute to any textarea or text input whe
 Import the component and use it directly in your code:
 
 ```html
-<script type="module" src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
 
 <dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe"></dictate-button>
 ```
