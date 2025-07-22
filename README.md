@@ -43,9 +43,9 @@ Import the component and use it directly in your code:
 <dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe"></dictate-button>
 ```
 
-### As NPM package
+### From NPM
 
-Import it once for your app:
+Import once for your app.
 
 The button component:
 
