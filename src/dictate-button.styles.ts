@@ -1,4 +1,4 @@
-export const btnDictateStyles = `
+export const dictateButtonStyles = `
 :host([theme="dark"]) {
   color-scheme: only dark;
 }

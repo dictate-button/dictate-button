@@ -1,10 +1,10 @@
 import { customElement } from 'solid-element'
 import { createSignal } from 'solid-js'
-import { btnDictateStyles } from './dictate-button.styles'
+import { dictateButtonStyles } from './dictate-button.styles'
 
 console.debug('dictate-button version:', __APP_VERSION__)
 
-export interface BtnDictateProps {
+export interface DictateButtonProps {
   size?: number
   apiEndpoint?: string
   // The props below are for types only. We don't use them inside the component.
@@ -15,14 +15,15 @@ export interface BtnDictateProps {
 declare module 'solid-js' {
   namespace JSX {
     interface IntrinsicElements {
-      'dictate-button': BtnDictateProps
+      'dictate-button': Element & DictateButtonProps
     }
   }
 }
 
-type BtnDictateStatus = 'idle' | 'recording' | 'processing' | 'error'
+type DictateButtonStatus = 'idle' | 'recording' | 'processing' | 'error'
 
-const DEFAULT_TRANSCRIBE_API_ENDPOINT = 'https://api.dictate-button.io/transcribe'
+const DEFAULT_TRANSCRIBE_API_ENDPOINT =
+  'https://api.dictate-button.io/transcribe'
 const APP_NAME = 'dictate-button.io'
 
 customElement(
@@ -31,12 +32,12 @@ customElement(
     size: 24,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
   },
-  (props: BtnDictateProps, { element }) => {
+  (props: DictateButtonProps, { element }) => {
     const { size, apiEndpoint } = props
 
     console.debug('api', apiEndpoint)
 
-    const [status, setStatus] = createSignal<BtnDictateStatus>('idle')
+    const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
 
     let mediaRecorder: MediaRecorder | null = null
     let audioChunks: Blob[] = []
@@ -123,7 +124,7 @@ customElement(
 
     return (
       <div part="container" class="dictate-button__container">
-        <style>{btnDictateStyles}</style>
+        <style>{dictateButtonStyles}</style>
         <button
           part="button"
           style={`width:${size}px;height:${size}px"`}
@@ -141,7 +142,7 @@ customElement(
   }
 )
 
-const buttonTitle = (status: BtnDictateStatus) => {
+const buttonTitle = (status: DictateButtonStatus) => {
   switch (status) {
     case 'idle':
       return `Start dictation (${APP_NAME})`
