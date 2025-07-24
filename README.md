@@ -125,13 +125,9 @@ The API expects:
 
 ## Browser Compatibility
 
-The dictate-button component requires modern browser features:
+The dictate-button component requires the following browser features:
 - Web Components
 - MediaRecorder API
 - Fetch API
 
 Works in all modern browsers (Chrome, Firefox, Safari, Edge).
-
-## License
-
-!!! TBD
