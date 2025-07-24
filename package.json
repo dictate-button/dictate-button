@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "dictate-button",
   "version": "0.1.0",
   "description": "Dictate Button (Web Component)",
@@ -15,9 +14,9 @@
     "transcribing",
     "voice-to-text",
     "voice-recognition",
-    "web-component",
-    "whisper"
+    "web-component"
   ],
+  "license": "Apache-2.0",
   "main": "dist/dictate-button.cjs.js",
   "module": "dist/dictate-button.es.js",
   "types": "dist/dictate-button.d.ts",
@@ -48,5 +47,13 @@
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-solid": "^2.11.7",
     "vite-plugin-static-copy": "^3.1.1"
+  },
+  "homepage": "https://github.com/kkomelin/dictate-button",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kkomelin/dictate-button.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kkomelin/dictate-button/issues"
   }
 }
