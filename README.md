@@ -2,6 +2,8 @@
 
 A customizable web component that adds speech-to-text dictation capabilities to any text input or textarea field on your website.
 
+Developed for [dictate-button.io](https://dictate-button.io).
+
 ## Features
 
 - Easy integration with any website
