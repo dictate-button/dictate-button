@@ -1,6 +1,6 @@
 {
   "name": "dictate-button",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Dictate Button (Web Component)",
   "keywords": [
     "custom-element",
@@ -29,6 +29,14 @@
     "./inject": {
       "import": "./dist/inject.es.js",
       "require": "./dist/inject.cjs.js"
+    },
+    "./inject-exclusive": {
+      "import": "./dist/inject-exclusive.es.js",
+      "require": "./dist/inject-exclusive.cjs.js"
+    },
+    "./inject-inclusive": {
+      "import": "./dist/inject-inclusive.es.js",
+      "require": "./dist/inject-inclusive.cjs.js"
     }
   },
   "scripts": {

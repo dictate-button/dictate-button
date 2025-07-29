@@ -1,4 +1,5 @@
 # Dictate Button (Web Component)
+![NPM Version](https://img.shields.io/npm/v/dictate-button)
 
 A customizable web component that adds speech-to-text dictation capabilities to any text input or textarea field on your website.
 
@@ -8,7 +9,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 
 - Easy integration with any website
 - Compatible with any framework (or no framework)
-- Automatic injection into any textarea or text input with the `data-dictate-button-target` attribute
+- Automatic injection into any textarea or text input with the `data-dictate-button-on` attribute (exclusive mode) or without the `data-dictate-button-off` attribute (inclusive mode)
 - Simple speech-to-text functionality with clean UI
 - Customizable size and API endpoint
 - Dark and light theme support
@@ -17,25 +18,52 @@ Developed for [dictate-button.io](https://dictate-button.io).
 
 ## Usage
 
+### Auto-inject modes
+
+Choose the auto-inject mode that best suits your needs:
+
+| Mode | Description | Scripts |
+|---|---|---|
+| Exclusive | Automatically injects the dictate button into any textarea or text input **with the `data-dictate-button-on` attribute**. | `inject-exclusive.es.js`, `inject-exclusive.cjs.js` |
+| Inclusive | Automatically injects the dictate button into any textarea or text input **without the `data-dictate-button-off` attribute**. | `inject-inclusive.es.js`, `inject-inclusive.cjs.js` |
+
 ### From CDN
 
-#### Option 1: Using the auto-inject script
+#### Option 1: Using the exclusive auto-inject script
 
-Include the inject script in your HTML:
+In your HTML `<head>` tag, add the following script tags:
 
 ```html
 <script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
-<script type="module" crossorigin src="https://cdn.dictate-button.io/inject.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.es.js"></script>
 ```
 
-Add the `data-dictate-button-target` attribute to any textarea or text input where you want the dictate button to appear:
+Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text]` elements where you want the dictate button to appear:
 
 ```html
-<textarea data-dictate-button-target></textarea>
-<input type="text" data-dictate-button-target />
+<textarea data-dictate-button-on></textarea>
+<input type="text" data-dictate-button-on />
 ```
 
-#### Option 2: Manual integration
+#### Option 2: Using the inclusive auto-inject script
+
+In your HTML `<head>` tag, add the following script tags:
+
+```html
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.es.js"></script>
+```
+
+All `textarea` and `input[type=text]` elements without the `data-dictate-button-off` attribute will be automatically enhanced with the dictate button by default.
+
+To disable that for a specific field, add the `data-dictate-button-off` attribute to it this way:
+
+```html
+<textarea data-dictate-button-off></textarea>
+<input type="text" data-dictate-button-off />
+```
+
+#### Option 3: Manual integration
 
 Import the component and use it directly in your code:
 
@@ -58,8 +86,12 @@ import 'dictate-button'
 The auto-inject script:
 
 ```js
-import 'dictate-button/inject'
+import 'dictate-button/inject-exclusive'
+// or
+import 'dictate-button/inject-inclusive'
 ```
+
+To choose between **exclusive** and **inclusive** auto-inject modes, see the [Auto-inject modes](#auto-inject-modes) section.
 
 ## Events
 
