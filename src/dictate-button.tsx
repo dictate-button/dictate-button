@@ -7,6 +7,7 @@ console.debug('dictate-button version:', __APP_VERSION__)
 export interface DictateButtonProps {
   size?: number
   apiEndpoint?: string
+  language?: string
   // The props below are for types only. We don't use them inside the component.
   theme?: 'light' | 'dark'
   class?: string
@@ -33,7 +34,7 @@ customElement(
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
   },
   (props: DictateButtonProps, { element }) => {
-    const { size, apiEndpoint } = props
+    const { size, apiEndpoint, language } = props
 
     console.debug('api', apiEndpoint)
 
@@ -74,9 +75,17 @@ customElement(
             const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
 
             try {
+              const formData = new FormData()
+              formData.append('audio', audioBlob, 'recording.webm')
+              formData.append('origin', window?.location?.origin)
+              
+              if (language) {
+                formData.append('language', language)
+              }
+              
               const response = await fetch(apiEndpoint!, {
                 method: 'POST',
-                body: audioBlob,
+                body: formData,
               })
 
               if (!response.ok) throw new Error('Failed to transcribe audio')

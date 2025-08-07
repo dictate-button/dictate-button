@@ -70,7 +70,7 @@ Import the component and use it directly in your code:
 ```html
 <script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
 
-<dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe"></dictate-button>
+<dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
 ```
 
 ### From NPM
@@ -124,6 +124,7 @@ dictateButton.addEventListener('transcribing:finished', (event) => {
 |---------------|---------|-----------------------------------------|----------------------------------------|
 | size          | number  | 24                                      | Size of the button in pixels           |
 | apiEndpoint   | string  | https://api.dictate-button.io/transcribe| API endpoint for transcription service |
+| language      | string  | (not set)                               | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
 | theme         | string  | (inherits from page)                    | 'light' or 'dark'                      |
 | class         | string  |                                         | Custom CSS class                       |
 
@@ -150,11 +151,15 @@ dictate-button::part(icon) {
 
 ## API Endpoint
 
-By default, dictate-button uses the `https://api.dictate-button.io/transcribe` endpoint for speech-to-text conversion. You can specify your own endpoint by setting the `apiEndpoint` attribute.
+By default, dictate-button uses the `https://api.dictate-button.io/transcribe` endpoint for speech-to-text conversion. 
+You can specify your own endpoint by setting the `apiEndpoint` attribute.
 
 The API expects:
 - POST request
-- Audio data as a Blob (audio/webm format)
+- Multipart form data with the following fields:
+  - `audio`: Audio data as a Blob (audio/webm format)
+  - `origin`: The origin of the website (automatically added)
+  - `language`: Optional language code (if provided as an attribute)
 - Response should be JSON with a `text` property containing the transcribed text
 
 ## Browser Compatibility
