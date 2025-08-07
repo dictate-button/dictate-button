@@ -30,6 +30,12 @@ function injectDictateButton() {
     dictateBtn.style.right = '0'
     dictateBtn.style.top = '0'
 
+    // Set document language as the dictate-button component's language.
+    const lang = document.documentElement.lang
+    if (lang && lang.length === 2) {
+      dictateBtn.language = lang
+    }
+
     // Add event listeners for the dictate-button component.
     dictateBtn.addEventListener('recording:started', (e) => {
       console.log('recording:started', e)
