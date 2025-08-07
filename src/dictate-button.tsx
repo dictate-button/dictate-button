@@ -32,6 +32,7 @@ customElement(
   {
     size: 24,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
+    language: undefined,
   },
   (props: DictateButtonProps, { element }) => {
     const { size, apiEndpoint, language } = props
