@@ -40,7 +40,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+     "!dist/404.html"
   ],
   "publishConfig": {
     "access": "public"
