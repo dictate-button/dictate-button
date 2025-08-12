@@ -18,6 +18,10 @@ export const dictateButtonStyles = `
   justify-content: center;
   opacity: 0.8;
   transition: opacity 0.2s ease-in-out;
+  border-radius: 50%;
+  border: 12px solid transparent;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3);
+  transition: box-shadow 0.05s linear;
 }
 
 :host .dictate-button__button .dictate-button__icon {

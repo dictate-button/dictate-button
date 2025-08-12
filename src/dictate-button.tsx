@@ -27,6 +27,14 @@ const DEFAULT_TRANSCRIBE_API_ENDPOINT =
   'https://api.dictate-button.io/transcribe'
 const APP_NAME = 'dictate-button.io'
 
+// Audio analysis constants
+const MIN_DB = -70,
+  MAX_DB = -10
+const MIN_WIDTH = 0,
+  MAX_WIDTH = 12 // px
+const ATTACK = 0.25,
+  RELEASE = 0.05
+
 customElement(
   'dictate-button',
   {
@@ -44,11 +52,79 @@ customElement(
     let mediaRecorder: MediaRecorder | null = null
     let audioChunks: Blob[] = []
 
+    // Audio analysis variables
+    let audioCtx: AudioContext | null = null
+    let analyser: AnalyserNode | null = null
+    let dataArray: Uint8Array | null = null
+    let running = false
+    let smoothLevel = 0
+
+    // Audio analysis helper functions
+    const dbToNorm = (db: number) => {
+      if (db <= MIN_DB) return 0
+      if (db >= MAX_DB) return 1
+      return (db - MIN_DB) / (MAX_DB - MIN_DB)
+    }
+
+    const rmsFromTimeDomain = (buf: Uint8Array) => {
+      let sum = 0
+      for (let i = 0; i < buf.length; i++) {
+        const v = (buf[i] - 128) / 128
+        sum += v * v
+      }
+      return Math.sqrt(sum / buf.length)
+    }
+
+    const rmsToDb = (rms: number) => {
+      const minRms = 1e-8
+      return 20 * Math.log10(Math.max(rms, minRms))
+    }
+
+    const updateShadow = (norm: number) => {
+      const button = element.querySelector('.dictate-button__button') as HTMLElement
+      
+      // const recordingIcon = element.querySelector(
+      //   '.dictate-button__icon--recording'
+      // ) as HTMLElement
+      if (button) {
+        const width = MIN_WIDTH + norm * (MAX_WIDTH - MIN_WIDTH)
+        const alpha = 0.3 + norm * 0.4
+        button.style.boxShadow = `0 0 0 ${width}px rgba(255,255,255,${alpha})`
+      }
+    }
+
+    const loop = () => {
+      if (!running || !analyser || !dataArray) return
+
+      analyser.getByteTimeDomainData(dataArray)
+      const rms = rmsFromTimeDomain(dataArray)
+      const db = rmsToDb(rms)
+      const norm = dbToNorm(db)
+
+      const alpha = norm > smoothLevel ? ATTACK : RELEASE
+      smoothLevel = alpha * norm + (1 - alpha) * smoothLevel
+
+      updateShadow(smoothLevel)
+
+      requestAnimationFrame(loop)
+    }
+
     const cleanup = () => {
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop()
       }
       audioChunks = []
+
+      // Clean up audio analysis
+      running = false
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close()
+      }
+      audioCtx = null
+      analyser = null
+      dataArray = null
+      smoothLevel = 0
+      updateShadow(0)
     }
 
     element.addEventListener('disconnected', cleanup)
@@ -61,6 +137,16 @@ customElement(
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
           })
+
+          // Set up audio analysis
+          audioCtx = new (window.AudioContext ||
+            (window as any).webkitAudioContext)()
+          const source = audioCtx.createMediaStreamSource(stream)
+          analyser = audioCtx.createAnalyser()
+          analyser.fftSize = 2048
+          source.connect(analyser)
+          dataArray = new Uint8Array(analyser.fftSize)
+
           mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
           audioChunks = []
 
@@ -69,6 +155,9 @@ customElement(
           }
 
           mediaRecorder.onstop = async () => {
+            // Stop audio analysis
+            running = false
+
             setStatus('processing')
 
             event(element, 'transcribing:started', 'Started transcribing')
@@ -79,11 +168,11 @@ customElement(
               const formData = new FormData()
               formData.append('audio', audioBlob, 'recording.webm')
               formData.append('origin', window?.location?.origin)
-              
+
               if (language) {
                 formData.append('language', language)
               }
-              
+
               const response = await fetch(apiEndpoint!, {
                 method: 'POST',
                 body: formData,
@@ -116,6 +205,10 @@ customElement(
 
           event(element, 'recording:started', 'Started recording')
 
+          // Start audio analysis
+          running = true
+          loop()
+
           setStatus('recording')
         } catch (error) {
           console.error('Failed to start recording:', error)
@@ -128,6 +221,7 @@ customElement(
         event(element, 'recording:stopped', 'Stopped recording')
 
         setStatus('idle')
+        cleanup()
       }
     }
 
