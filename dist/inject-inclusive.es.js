@@ -1,0 +1,37 @@
+function a() {
+  const i = document.querySelectorAll(
+    'textarea:not([data-dictate-button-off]):not([data-dictate-button-enabled]), input[type="text"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])'
+  );
+  for (const o of i) {
+    const n = document.createElement("div");
+    n.style.position = "relative", n.style.display = "inline-block", n.style.width = "auto", n.style.color = "inherit", o.parentNode.insertBefore(n, o), o.setAttribute("data-dictate-button-enabled", ""), n.appendChild(o), o.style.boxSizing = "border-box";
+    const t = document.createElement("dictate-button");
+    t.size = 24, t.style.position = "absolute", t.style.right = "0", t.style.top = "0";
+    const d = document.documentElement.lang;
+    d && d.length === 2 && (t.language = d), t.addEventListener("recording:started", (e) => {
+      console.log("recording:started", e);
+    }), t.addEventListener("recording:stopped", (e) => {
+      console.log("recording:stopped", e);
+    }), t.addEventListener("recording:failed", (e) => {
+      console.log("recording:failed", e);
+    }), t.addEventListener("transcribing:started", (e) => {
+      console.log("transcribing:started", e);
+    }), t.addEventListener("transcribing:finished", (e) => {
+      console.log("transcribing:finished", e);
+      const s = e.detail;
+      r(o, s);
+    }), t.addEventListener("transcribing:failed", (e) => {
+      console.log("transcribing:failed", e);
+    }), n.appendChild(t);
+  }
+}
+function r(i, o) {
+  const n = i.selectionStart || 0, t = i.selectionEnd || 0;
+  i.value = i.value.substring(0, n) + o + i.value.substring(t);
+}
+document.addEventListener("DOMContentLoaded", () => {
+  a(), new MutationObserver(a).observe(document.body, {
+    childList: !0,
+    subtree: !0
+  });
+});
