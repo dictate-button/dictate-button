@@ -31,14 +31,14 @@ const APP_NAME = 'dictate-button.io'
 const MIN_DB = -70,
   MAX_DB = -10
 const MIN_WIDTH = 0,
-  MAX_WIDTH = 12 // px
+  MAX_WIDTH = 4 // px
 const ATTACK = 0.25,
   RELEASE = 0.05
 
 customElement(
   'dictate-button',
   {
-    size: 24,
+    size: 30,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
     language: undefined,
   },
@@ -81,19 +81,20 @@ customElement(
     }
 
     const updateShadow = (norm: number) => {
-      const button = element.querySelector('.dictate-button__button') as HTMLElement
-      
-      // const recordingIcon = element.querySelector(
-      //   '.dictate-button__icon--recording'
-      // ) as HTMLElement
-      if (button) {
-        const width = MIN_WIDTH + norm * (MAX_WIDTH - MIN_WIDTH)
-        const alpha = 0.3 + norm * 0.4
-        button.style.boxShadow = `0 0 0 ${width}px rgba(255,255,255,${alpha})`
+      const button = element.shadowRoot.querySelector(
+        '.dictate-button__button'
+      ) as HTMLElement
+
+      if (!button) {
+        return
       }
+
+      const width = MIN_WIDTH + norm * (MAX_WIDTH - MIN_WIDTH)
+      const alpha = 0.0 + norm * 0.4
+      button.style.boxShadow = `0 0 0 ${width}px light-dark(rgba(0, 0, 0, ${alpha}), rgba(255, 255, 255, ${alpha}))`
     }
 
-    const loop = () => {
+    const rerenderRecordingIndication = () => {
       if (!running || !analyser || !dataArray) return
 
       analyser.getByteTimeDomainData(dataArray)
@@ -106,7 +107,7 @@ customElement(
 
       updateShadow(smoothLevel)
 
-      requestAnimationFrame(loop)
+      requestAnimationFrame(rerenderRecordingIndication)
     }
 
     const cleanup = () => {
@@ -145,7 +146,9 @@ customElement(
           analyser = audioCtx.createAnalyser()
           analyser.fftSize = 2048
           source.connect(analyser)
-          dataArray = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>
+          dataArray = new Uint8Array(
+            analyser.fftSize
+          ) as Uint8Array<ArrayBuffer>
 
           mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
           audioChunks = []
@@ -207,7 +210,7 @@ customElement(
 
           // Start audio analysis
           running = true
-          loop()
+          rerenderRecordingIndication()
 
           setStatus('recording')
         } catch (error) {
@@ -298,12 +301,12 @@ const RecordingIcon = () => (
     class="dictate-button__icon dictate-button__icon--recording"
     viewBox="0 0 24 24"
     fill="currentColor"
+    stroke="none"
+    stroke-width="0"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path
-      fill-rule="evenodd"
-      d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z"
-      clip-rule="evenodd"
-    />
+    <circle cx="12" cy="12" r="10" />
   </svg>
 )
 
@@ -336,15 +339,14 @@ const ErrorIcon = () => (
     // @ts-ignore
     part="icon"
     class="dictate-button__icon dictate-button__icon--error"
-    fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    fill="none"
     stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M6 18 18 6M6 6l12 12"
-    />
+    <line x1="12" x2="12" y1="4" y2="14" />
+    <line x1="12" x2="12.01" y1="20" y2="20" />
   </svg>
 )

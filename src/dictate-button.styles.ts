@@ -6,22 +6,21 @@ export const dictateButtonStyles = `
   color-scheme: only light;
 }
 
-:host .dictate-button__container {
-  margin: 5px;
-}
-
 :host .dictate-button__button {
   cursor: pointer;
-  padding: 2px;
+  padding: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.8;
-  transition: opacity 0.2s ease-in-out;
+  color: light-dark(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.95));
+  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.7));
   border-radius: 50%;
-  border: 12px solid transparent;
-  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3);
+  border: none;
   transition: box-shadow 0.05s linear;
+  box-sizing: border-box;
+}
+:host .dictate-button__button:hover, :host .dictate-button__button:focus {
+  background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.6));
 }
 
 :host .dictate-button__button .dictate-button__icon {

@@ -26,7 +26,6 @@ export default defineConfig({
     lib: {
       entry: {
         'dictate-button': 'src/dictate-button.tsx',
-        inject: 'src/inject.js',
         'inject-exclusive': 'src/inject-exclusive.js',
         'inject-inclusive': 'src/inject-inclusive.js',
       },

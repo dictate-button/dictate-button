@@ -86,8 +86,9 @@ import 'dictate-button'
 The auto-inject script:
 
 ```js
+// For all text fields:
 import 'dictate-button/inject-exclusive'
-// or
+// or for some text fields:
 import 'dictate-button/inject-inclusive'
 ```
 
@@ -122,7 +123,7 @@ dictateButton.addEventListener('transcribing:finished', (event) => {
 
 | Attribute     | Type    | Default                                 | Description                            |
 |---------------|---------|-----------------------------------------|----------------------------------------|
-| size          | number  | 24                                      | Size of the button in pixels           |
+| size          | number  | 30                                      | Size of the button in pixels           |
 | apiEndpoint   | string  | https://api.dictate-button.io/transcribe| API endpoint for transcription service |
 | language      | string  | (not set)                               | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
 | theme         | string  | (inherits from page)                    | 'light' or 'dark'                      |
