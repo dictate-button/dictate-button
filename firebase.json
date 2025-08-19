@@ -11,7 +11,7 @@
     ],
     "headers": [
       {
-        "source": "**/*.@(js|ts)",
+        "source": "**/*.@(js|mjs|ts)",
         "headers": [
           {
             "key": "Access-Control-Allow-Origin",
@@ -20,7 +20,7 @@
         ]
       },
       {
-        "source": "**/*.@(js|ts)",
+        "source": "**/*.@(js|mjs|ts)",
         "headers": [
           {
             "key": "Cache-Control",
