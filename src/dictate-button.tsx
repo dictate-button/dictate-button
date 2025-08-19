@@ -55,7 +55,7 @@ customElement(
     // Audio analysis variables
     let audioCtx: AudioContext | null = null
     let analyser: AnalyserNode | null = null
-    let dataArray: Uint8Array<ArrayBuffer> | null = null
+    let dataArray: Uint8Array | null = null
     let running = false
     let smoothLevel = 0
 
@@ -146,9 +146,7 @@ customElement(
           analyser = audioCtx.createAnalyser()
           analyser.fftSize = 2048
           source.connect(analyser)
-          dataArray = new Uint8Array(
-            analyser.fftSize
-          ) as Uint8Array<ArrayBuffer>
+          dataArray = new Uint8Array(analyser.fftSize)
 
           mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
           audioChunks = []
