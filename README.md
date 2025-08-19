@@ -163,26 +163,6 @@ The API expects:
   - `language`: Optional language code (if provided as an attribute)
 - Response should be JSON with a `text` property containing the transcribed text
 
-## Migration Guide
-
-### Breaking Changes in v1.0.0
-
-- The `dictate-button/inject` import path has been removed and replaced with two new options:
-  - `dictate-button/inject-exclusive`: Only adds buttons to elements with the `data-dictate-button-on` attribute
-  - `dictate-button/inject-inclusive`: Adds buttons to all textarea/text inputs unless they have the `data-dictate-button-off` attribute
-
-If you were previously using:
-```js
-import 'dictate-button/inject'
-```
-
-You should now use:
-```js
-import 'dictate-button/inject-exclusive'
-```
-
-For more details on the differences between exclusive and inclusive modes, see the [Auto-inject modes](#auto-inject-modes) section.
-
 ## Browser Compatibility
 
 The dictate-button component requires the following browser features:
