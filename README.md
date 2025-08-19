@@ -86,9 +86,9 @@ import 'dictate-button'
 The auto-inject script:
 
 ```js
-// For all text fields:
+// For selected text fields (with data-dictate-button-on attribute):
 import 'dictate-button/inject-exclusive'
-// or for some text fields:
+// or for all text fields (except those with data-dictate-button-off attribute):
 import 'dictate-button/inject-inclusive'
 ```
 
@@ -162,6 +162,26 @@ The API expects:
   - `origin`: The origin of the website (automatically added)
   - `language`: Optional language code (if provided as an attribute)
 - Response should be JSON with a `text` property containing the transcribed text
+
+## Migration Guide
+
+### Breaking Changes in v1.0.0
+
+- The `dictate-button/inject` import path has been removed and replaced with two new options:
+  - `dictate-button/inject-exclusive`: Only adds buttons to elements with the `data-dictate-button-on` attribute
+  - `dictate-button/inject-inclusive`: Adds buttons to all textarea/text inputs unless they have the `data-dictate-button-off` attribute
+
+If you were previously using:
+```js
+import 'dictate-button/inject'
+```
+
+You should now use:
+```js
+import 'dictate-button/inject-exclusive'
+```
+
+For more details on the differences between exclusive and inclusive modes, see the [Auto-inject modes](#auto-inject-modes) section.
 
 ## Browser Compatibility
 
