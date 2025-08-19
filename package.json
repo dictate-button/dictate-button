@@ -22,18 +22,18 @@
   "exports": {
     ".": {
       "types": "./dist/dictate-button.d.ts",
-      "import": "./dist/dictate-button.mjs",
-      "default": "./dist/dictate-button.mjs"
+      "import": "./dist/dictate-button.js",
+      "default": "./dist/dictate-button.js"
     },
     "./inject-exclusive": {
       "types": "./dist/inject-exclusive.d.ts",
-      "import": "./dist/inject-exclusive.mjs",
-      "default": "./dist/inject-exclusive.mjs"
+      "import": "./dist/inject-exclusive.js",
+      "default": "./dist/inject-exclusive.js"
     },
     "./inject-inclusive": {
       "types": "./dist/inject-inclusive.d.ts",
-      "import": "./dist/inject-inclusive.mjs",
-      "default": "./dist/inject-inclusive.mjs"
+      "import": "./dist/inject-inclusive.js",
+      "default": "./dist/inject-inclusive.js"
     }
   },
   "files": [

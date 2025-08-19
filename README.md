@@ -24,8 +24,8 @@ Choose the auto-inject mode that best suits your needs:
 
 | Mode | Description | Scripts |
 |---|---|---|
-| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.mjs` |
-| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.mjs` |
+| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.js` |
+| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
 
 ### From CDN
 
@@ -34,8 +34,8 @@ Choose the auto-inject mode that best suits your needs:
 In your HTML `<head>` tag, add the following script tags:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.mjs"></script>
-<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.mjs"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.js"></script>
 ```
 
 Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text]` elements where you want the dictate button to appear:
@@ -50,8 +50,8 @@ Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text
 In your HTML `<head>` tag, add the following script tags:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.mjs"></script>
-<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.mjs"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.js"></script>
 ```
 
 All `textarea` and `input[type=text]` elements without the `data-dictate-button-off` attribute will be automatically enhanced with the dictate button by default.
@@ -68,7 +68,7 @@ To disable that for a specific field, add the `data-dictate-button-off` attribut
 Import the component and use it directly in your code:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.mjs"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
 
 <dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
 ```
