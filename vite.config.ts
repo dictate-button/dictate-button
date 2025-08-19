@@ -29,7 +29,7 @@ export default defineConfig({
         'inject-exclusive': 'src/inject-exclusive.js',
         'inject-inclusive': 'src/inject-inclusive.js',
       },
-      formats: ['es', 'cjs'],
+      formats: ['es'],
       fileName: (format, entryName) => `${entryName}.${format}.js`,
     },
   },

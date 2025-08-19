@@ -17,27 +17,24 @@
     "web-component"
   ],
   "license": "Apache-2.0",
-  "main": "dist/dictate-button.cjs.js",
+  "main": "dist/dictate-button.es.js",
   "module": "dist/dictate-button.es.js",
   "types": "dist/dictate-button.d.ts",
   "exports": {
     ".": {
       "types": "./dist/dictate-button.d.ts",
-      "import": "./dist/dictate-button.es.js",
-      "require": "./dist/dictate-button.cjs.js"
+      "import": "./dist/dictate-button.es.js"
     },
     "./inject-exclusive": {
-      "import": "./dist/inject-exclusive.es.js",
-      "require": "./dist/inject-exclusive.cjs.js"
+      "import": "./dist/inject-exclusive.es.js"
     },
     "./inject-inclusive": {
-      "import": "./dist/inject-inclusive.es.js",
-      "require": "./dist/inject-inclusive.cjs.js"
+      "import": "./dist/inject-inclusive.es.js"
     }
   },
   "files": [
     "dist",
-     "!dist/404.html"
+    "!dist/404.html"
   ],
   "publishConfig": {
     "access": "public"
@@ -50,12 +47,12 @@
   },
   "dependencies": {
     "solid-element": "^1.9.1",
-    "solid-js": "^1.9.8"
+    "solid-js": "^1.9.9"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
-    "vite": "^7.1.0",
+    "vite": "^7.1.3",
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-solid": "^2.11.8",
     "vite-plugin-static-copy": "^3.1.1"

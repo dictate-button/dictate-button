@@ -24,8 +24,8 @@ Choose the auto-inject mode that best suits your needs:
 
 | Mode | Description | Scripts |
 |---|---|---|
-| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.es.js`, `inject-exclusive.cjs.js` |
-| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.es.js`, `inject-inclusive.cjs.js` |
+| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.es.js` |
+| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.es.js` |
 
 ### From CDN
 
