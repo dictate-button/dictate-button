@@ -17,19 +17,23 @@
     "web-component"
   ],
   "license": "Apache-2.0",
-  "main": "dist/dictate-button.mjs",
-  "module": "dist/dictate-button.mjs",
+  "type": "module",
   "types": "dist/dictate-button.d.ts",
   "exports": {
     ".": {
       "types": "./dist/dictate-button.d.ts",
-      "import": "./dist/dictate-button.mjs"
+      "import": "./dist/dictate-button.mjs",
+      "default": "./dist/dictate-button.mjs"
     },
     "./inject-exclusive": {
-      "import": "./dist/inject-exclusive.mjs"
+      "types": "./dist/inject-exclusive.d.ts",
+      "import": "./dist/inject-exclusive.mjs",
+      "default": "./dist/inject-exclusive.mjs"
     },
     "./inject-inclusive": {
-      "import": "./dist/inject-inclusive.mjs"
+      "types": "./dist/inject-inclusive.d.ts",
+      "import": "./dist/inject-inclusive.mjs",
+      "default": "./dist/inject-inclusive.mjs"
     }
   },
   "files": [
