@@ -70,9 +70,11 @@ function calculateButtonPositionTop(container, textField) {
   if (textField.tagName.toLowerCase() === 'textarea') {
     return 0
   }
-  return Math.round(
+  
+  const calculatedTop = Math.round(
     container.clientHeight / 2 - BUTTON_SIZE / 2 - BUTTON_MARGIN
   )
+  return Math.max(0, calculatedTop)
 }
 
 function receiveText(textField, text) {

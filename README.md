@@ -70,7 +70,7 @@ Import the component and use it directly in your code:
 ```html
 <script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
 
-<dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
+<dictate-button size="30" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
 ```
 
 ### From NPM

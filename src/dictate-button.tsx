@@ -301,10 +301,6 @@ const RecordingIcon = () => (
     class="dictate-button__icon dictate-button__icon--recording"
     viewBox="0 0 24 24"
     fill="currentColor"
-    stroke="none"
-    stroke-width="0"
-    stroke-linecap="round"
-    stroke-linejoin="round"
   >
     <circle cx="12" cy="12" r="10" />
   </svg>
