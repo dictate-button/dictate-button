@@ -30,6 +30,7 @@ export default defineConfig({
         'inject-inclusive': 'src/inject-inclusive.js',
       },
       formats: ['es'],
+      fileName: (format, entryName) => `${entryName}.mjs`,
     },
   },
 })
