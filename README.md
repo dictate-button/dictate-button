@@ -24,8 +24,8 @@ Choose the auto-inject mode that best suits your needs:
 
 | Mode | Description | Scripts |
 |---|---|---|
-| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.es.js`, `inject-exclusive.cjs.js` |
-| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.es.js`, `inject-inclusive.cjs.js` |
+| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.mjs` |
+| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.mjs` |
 
 ### From CDN
 
@@ -34,8 +34,8 @@ Choose the auto-inject mode that best suits your needs:
 In your HTML `<head>` tag, add the following script tags:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
-<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.mjs"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.mjs"></script>
 ```
 
 Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text]` elements where you want the dictate button to appear:
@@ -50,8 +50,8 @@ Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text
 In your HTML `<head>` tag, add the following script tags:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
-<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.mjs"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.mjs"></script>
 ```
 
 All `textarea` and `input[type=text]` elements without the `data-dictate-button-off` attribute will be automatically enhanced with the dictate button by default.
@@ -68,7 +68,7 @@ To disable that for a specific field, add the `data-dictate-button-off` attribut
 Import the component and use it directly in your code:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.es.js"></script>
+<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.mjs"></script>
 
 <dictate-button size="24" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
 ```
@@ -86,8 +86,9 @@ import 'dictate-button'
 The auto-inject script:
 
 ```js
+// For selected text fields (with data-dictate-button-on attribute):
 import 'dictate-button/inject-exclusive'
-// or
+// or for all text fields (except those with data-dictate-button-off attribute):
 import 'dictate-button/inject-inclusive'
 ```
 
@@ -122,7 +123,7 @@ dictateButton.addEventListener('transcribing:finished', (event) => {
 
 | Attribute     | Type    | Default                                 | Description                            |
 |---------------|---------|-----------------------------------------|----------------------------------------|
-| size          | number  | 24                                      | Size of the button in pixels           |
+| size          | number  | 30                                      | Size of the button in pixels           |
 | apiEndpoint   | string  | https://api.dictate-button.io/transcribe| API endpoint for transcription service |
 | language      | string  | (not set)                               | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
 | theme         | string  | (inherits from page)                    | 'light' or 'dark'                      |

@@ -1,9 +1,10 @@
-const BUTTONS_SIZE = 24 // px
+const BUTTON_SIZE = 30 // px
+const BUTTON_MARGIN = 10 // px
 const WATCH_DOM_CHANGES = true
 
 function injectDictateButton() {
   const textFields = document.querySelectorAll(
-    'textarea[data-dictate-button-on]:not([data-dictate-button-enabled]), input[type="text"][data-dictate-button-on]:not([data-dictate-button-enabled]), textarea[data-dictate-button-target]:not([data-dictate-button-enabled]), input[type="text"][data-dictate-button-target]:not([data-dictate-button-enabled])'
+    'textarea[data-dictate-button-on]:not([data-dictate-button-enabled]), input[type="text"][data-dictate-button-on]:not([data-dictate-button-enabled])'
   )
 
   for (const textField of textFields) {
@@ -21,14 +22,15 @@ function injectDictateButton() {
 
     // Ensure textarea fills container
     textField.style.boxSizing = 'border-box'
-    // textarea.style.paddingRight = `${BUTTONS_SIZE + 2 * 2 + 6}px`
 
     // Add the dictate-button component.
     const dictateBtn = document.createElement('dictate-button')
-    dictateBtn.size = BUTTONS_SIZE
+    dictateBtn.size = BUTTON_SIZE
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
-    dictateBtn.style.top = '0'
+    dictateBtn.style.top =
+      calculateButtonPositionTop(container, textField) + 'px'
+    dictateBtn.style.margin = BUTTON_MARGIN + 'px'
 
     // Set document language as the dictate-button component's language.
     const lang = document.documentElement.lang
@@ -62,6 +64,15 @@ function injectDictateButton() {
 
     container.appendChild(dictateBtn)
   }
+}
+
+function calculateButtonPositionTop(container, textField) {
+  if (textField.tagName.toLowerCase() === 'textarea') {
+    return 0
+  }
+  return Math.round(
+    container.clientHeight / 2 - BUTTON_SIZE / 2 - BUTTON_MARGIN
+  )
 }
 
 function receiveText(textField, text) {

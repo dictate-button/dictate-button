@@ -27,10 +27,18 @@ const DEFAULT_TRANSCRIBE_API_ENDPOINT =
   'https://api.dictate-button.io/transcribe'
 const APP_NAME = 'dictate-button.io'
 
+// Audio analysis constants
+const MIN_DB = -70,
+  MAX_DB = -10
+const MIN_WIDTH = 0,
+  MAX_WIDTH = 4 // px
+const ATTACK = 0.25,
+  RELEASE = 0.05
+
 customElement(
   'dictate-button',
   {
-    size: 24,
+    size: 30,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
     language: undefined,
   },
@@ -44,11 +52,80 @@ customElement(
     let mediaRecorder: MediaRecorder | null = null
     let audioChunks: Blob[] = []
 
+    // Audio analysis variables
+    let audioCtx: AudioContext | null = null
+    let analyser: AnalyserNode | null = null
+    let dataArray: Uint8Array | null = null
+    let running = false
+    let smoothLevel = 0
+
+    // Audio analysis helper functions
+    const dbToNorm = (db: number) => {
+      if (db <= MIN_DB) return 0
+      if (db >= MAX_DB) return 1
+      return (db - MIN_DB) / (MAX_DB - MIN_DB)
+    }
+
+    const rmsFromTimeDomain = (buf: Uint8Array) => {
+      let sum = 0
+      for (let i = 0; i < buf.length; i++) {
+        const v = (buf[i] - 128) / 128
+        sum += v * v
+      }
+      return Math.sqrt(sum / buf.length)
+    }
+
+    const rmsToDb = (rms: number) => {
+      const minRms = 1e-8
+      return 20 * Math.log10(Math.max(rms, minRms))
+    }
+
+    const updateShadow = (norm: number) => {
+      const button = element.shadowRoot.querySelector(
+        '.dictate-button__button'
+      ) as HTMLElement
+
+      if (!button) {
+        return
+      }
+
+      const width = MIN_WIDTH + norm * (MAX_WIDTH - MIN_WIDTH)
+      const alpha = 0.0 + norm * 0.4
+      button.style.boxShadow = `0 0 0 ${width}px light-dark(rgba(0, 0, 0, ${alpha}), rgba(255, 255, 255, ${alpha}))`
+    }
+
+    const rerenderRecordingIndication = () => {
+      if (!running || !analyser || !dataArray) return
+
+      analyser.getByteTimeDomainData(dataArray)
+      const rms = rmsFromTimeDomain(dataArray)
+      const db = rmsToDb(rms)
+      const norm = dbToNorm(db)
+
+      const alpha = norm > smoothLevel ? ATTACK : RELEASE
+      smoothLevel = alpha * norm + (1 - alpha) * smoothLevel
+
+      updateShadow(smoothLevel)
+
+      requestAnimationFrame(rerenderRecordingIndication)
+    }
+
     const cleanup = () => {
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop()
       }
       audioChunks = []
+
+      // Clean up audio analysis
+      running = false
+      if (audioCtx && audioCtx.state !== 'closed') {
+        audioCtx.close()
+      }
+      audioCtx = null
+      analyser = null
+      dataArray = null
+      smoothLevel = 0
+      updateShadow(0)
     }
 
     element.addEventListener('disconnected', cleanup)
@@ -61,6 +138,16 @@ customElement(
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
           })
+
+          // Set up audio analysis
+          audioCtx = new (window.AudioContext ||
+            (window as any).webkitAudioContext)()
+          const source = audioCtx.createMediaStreamSource(stream)
+          analyser = audioCtx.createAnalyser()
+          analyser.fftSize = 2048
+          source.connect(analyser)
+          dataArray = new Uint8Array(analyser.fftSize)
+
           mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
           audioChunks = []
 
@@ -69,6 +156,9 @@ customElement(
           }
 
           mediaRecorder.onstop = async () => {
+            // Stop audio analysis
+            running = false
+
             setStatus('processing')
 
             event(element, 'transcribing:started', 'Started transcribing')
@@ -79,11 +169,11 @@ customElement(
               const formData = new FormData()
               formData.append('audio', audioBlob, 'recording.webm')
               formData.append('origin', window?.location?.origin)
-              
+
               if (language) {
                 formData.append('language', language)
               }
-              
+
               const response = await fetch(apiEndpoint!, {
                 method: 'POST',
                 body: formData,
@@ -116,6 +206,10 @@ customElement(
 
           event(element, 'recording:started', 'Started recording')
 
+          // Start audio analysis
+          running = true
+          rerenderRecordingIndication()
+
           setStatus('recording')
         } catch (error) {
           console.error('Failed to start recording:', error)
@@ -128,6 +222,7 @@ customElement(
         event(element, 'recording:stopped', 'Stopped recording')
 
         setStatus('idle')
+        cleanup()
       }
     }
 
@@ -204,12 +299,12 @@ const RecordingIcon = () => (
     class="dictate-button__icon dictate-button__icon--recording"
     viewBox="0 0 24 24"
     fill="currentColor"
+    stroke="none"
+    stroke-width="0"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path
-      fill-rule="evenodd"
-      d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z"
-      clip-rule="evenodd"
-    />
+    <circle cx="12" cy="12" r="10" />
   </svg>
 )
 
@@ -218,16 +313,22 @@ const ProcessingIcon = () => (
     // @ts-ignore
     part="icon"
     class="dictate-button__icon dictate-button__icon--processing"
-    fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    fill="none"
     stroke="currentColor"
+    // stroke-width="2"
+    stroke-width="1.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"
-    />
+    <path d="M12 2v4" />
+    <path d="m16.2 7.8 2.9-2.9" />
+    <path d="M18 12h4" />
+    <path d="m16.2 16.2 2.9 2.9" />
+    <path d="M12 18v4" />
+    <path d="m4.9 19.1 2.9-2.9" />
+    <path d="M2 12h4" />
+    <path d="m4.9 4.9 2.9 2.9" />
   </svg>
 )
 
@@ -236,15 +337,14 @@ const ErrorIcon = () => (
     // @ts-ignore
     part="icon"
     class="dictate-button__icon dictate-button__icon--error"
-    fill="none"
     viewBox="0 0 24 24"
-    stroke-width="1.5"
+    fill="none"
     stroke="currentColor"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      d="M6 18 18 6M6 6l12 12"
-    />
+    <line x1="12" x2="12" y1="4" y2="14" />
+    <line x1="12" x2="12.01" y1="20" y2="20" />
   </svg>
 )

@@ -1,6 +1,6 @@
 {
   "name": "dictate-button",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Dictate Button (Web Component)",
   "keywords": [
     "custom-element",
@@ -17,31 +17,28 @@
     "web-component"
   ],
   "license": "Apache-2.0",
-  "main": "dist/dictate-button.cjs.js",
-  "module": "dist/dictate-button.es.js",
+  "type": "module",
   "types": "dist/dictate-button.d.ts",
   "exports": {
     ".": {
       "types": "./dist/dictate-button.d.ts",
-      "import": "./dist/dictate-button.es.js",
-      "require": "./dist/dictate-button.cjs.js"
-    },
-    "./inject": {
-      "import": "./dist/inject.es.js",
-      "require": "./dist/inject.cjs.js"
+      "import": "./dist/dictate-button.mjs",
+      "default": "./dist/dictate-button.mjs"
     },
     "./inject-exclusive": {
-      "import": "./dist/inject-exclusive.es.js",
-      "require": "./dist/inject-exclusive.cjs.js"
+      "types": "./dist/inject-exclusive.d.ts",
+      "import": "./dist/inject-exclusive.mjs",
+      "default": "./dist/inject-exclusive.mjs"
     },
     "./inject-inclusive": {
-      "import": "./dist/inject-inclusive.es.js",
-      "require": "./dist/inject-inclusive.cjs.js"
+      "types": "./dist/inject-inclusive.d.ts",
+      "import": "./dist/inject-inclusive.mjs",
+      "default": "./dist/inject-inclusive.mjs"
     }
   },
   "files": [
     "dist",
-     "!dist/404.html"
+    "!dist/404.html"
   ],
   "publishConfig": {
     "access": "public"
@@ -54,12 +51,12 @@
   },
   "dependencies": {
     "solid-element": "^1.9.1",
-    "solid-js": "^1.9.8"
+    "solid-js": "^1.9.9"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
-    "vite": "^7.1.0",
+    "vite": "^7.1.3",
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-solid": "^2.11.8",
     "vite-plugin-static-copy": "^3.1.1"
