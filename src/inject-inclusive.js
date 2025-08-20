@@ -4,7 +4,7 @@ const WATCH_DOM_CHANGES = true
 const TEXT_FIELD_SELECTOR =
   'textarea:not([data-dictate-button-off]):not([data-dictate-button-enabled]), input[type="text"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])'
 
-function injectDictateButton() {
+export function injectDictateButton() {
   const textFields = document.querySelectorAll(TEXT_FIELD_SELECTOR)
 
   for (const textField of textFields) {
@@ -70,7 +70,7 @@ function calculateButtonPositionTop(container, textField) {
   if (textField.tagName.toLowerCase() === 'textarea') {
     return 0
   }
-  
+
   const calculatedTop = Math.round(
     container.clientHeight / 2 - BUTTON_SIZE / 2 - BUTTON_MARGIN
   )
@@ -78,10 +78,38 @@ function calculateButtonPositionTop(container, textField) {
 }
 
 function receiveText(textField, text) {
+  const textToInsert = text.trim()
+
+  // Ignore empty transcriptions.
+  if (textToInsert.length === 0) {
+    return
+  }
+
   const start = textField.selectionStart || 0
   const end = textField.selectionEnd || 0
+
+  // Check if we need to add whitespace before the text.
+  const needsLeadingSpace =
+    start > 0 &&
+    !textField.value.substring(start - 1, start).match(/\s/) &&
+    !textToInsert.startsWith(' ')
+
+  // Check if we need to add whitespace after the text.
+  const needsTrailingSpace =
+    end < textField.value.length &&
+    !textField.value.substring(end, end + 1).match(/\s/) &&
+    !textToInsert.endsWith(' ')
+
+  // Add whitespace as needed.
+  const formattedText =
+    (needsLeadingSpace ? ' ' : '') +
+    textToInsert +
+    (needsTrailingSpace ? ' ' : '')
+
   textField.value =
-    textField.value.substring(0, start) + text + textField.value.substring(end)
+    textField.value.substring(0, start) +
+    formattedText +
+    textField.value.substring(end)
 }
 
 document.addEventListener('DOMContentLoaded', () => {
