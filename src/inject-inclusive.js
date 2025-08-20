@@ -1,11 +1,11 @@
 const BUTTON_SIZE = 30 // px
 const BUTTON_MARGIN = 10 // px
 const WATCH_DOM_CHANGES = true
+const TEXT_FIELD_SELECTOR =
+  'textarea:not([data-dictate-button-off]):not([data-dictate-button-enabled]), input[type="text"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])'
 
 function injectDictateButton() {
-  const textFields = document.querySelectorAll(
-    'textarea:not([data-dictate-button-off]):not([data-dictate-button-enabled]), input[type="text"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])'
-  )
+  const textFields = document.querySelectorAll(TEXT_FIELD_SELECTOR)
 
   for (const textField of textFields) {
     // Add a wrapper div with relative positioning.
