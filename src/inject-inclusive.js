@@ -4,7 +4,7 @@ const WATCH_DOM_CHANGES = true
 const TEXT_FIELD_SELECTOR =
   'textarea:not([data-dictate-button-off]):not([data-dictate-button-enabled]), input[type="text"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])'
 
-export function injectDictateButton() {
+function injectDictateButton() {
   const textFields = document.querySelectorAll(TEXT_FIELD_SELECTOR)
 
   for (const textField of textFields) {
@@ -47,6 +47,8 @@ export function injectDictateButton() {
     })
     dictateBtn.addEventListener('recording:failed', (e) => {
       console.log('recording:failed', e)
+      // Focus on the field again.
+      textField.focus()
     })
 
     dictateBtn.addEventListener('transcribing:started', (e) => {
@@ -60,6 +62,8 @@ export function injectDictateButton() {
     })
     dictateBtn.addEventListener('transcribing:failed', (e) => {
       console.log('transcribing:failed', e)
+      // Focus on the field again.
+      textField.focus()
     })
 
     container.appendChild(dictateBtn)
@@ -110,6 +114,21 @@ function receiveText(textField, text) {
     textField.value.substring(0, start) +
     formattedText +
     textField.value.substring(end)
+
+  // Restore caret position.
+  const newCaretPos = start + formattedText.length
+  try {
+    textField.selectionStart = newCaretPos
+    textField.selectionEnd = newCaretPos
+  } catch (_) {
+    // Some inputs may not support selection; ignore safely.
+  }
+
+  // Notify all listeners.
+  textField.dispatchEvent(new Event('input', { bubbles: true }))
+
+  // Focus on the field again.
+  textField.focus()
 }
 
 document.addEventListener('DOMContentLoaded', () => {
