@@ -16,6 +16,13 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - Event-based API for interaction with your application
 - Built with SolidJS for optimal performance
 
+## Supported tags
+
+- textarea
+- input[type="text"]
+- input[type="search"]
+- input
+
 ## Usage
 
 ### Auto-inject modes
@@ -24,8 +31,8 @@ Choose the auto-inject mode that best suits your needs:
 
 | Mode | Description | Scripts |
 |---|---|---|
-| Exclusive | Enables for `textarea` and `input[type=text]` with the `data-dictate-button-on` attribute only. | `inject-exclusive.js` |
-| Inclusive | Enables for all `textarea` and `input[type=text]` without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
+| Exclusive | Enables for text fields with the `data-dictate-button-on` attribute only. | `inject-exclusive.js` |
+| Inclusive | Enables for text fields without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
 
 ### From CDN
 

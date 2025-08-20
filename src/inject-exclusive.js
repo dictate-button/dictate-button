@@ -1,8 +1,12 @@
 const BUTTON_SIZE = 30 // px
 const BUTTON_MARGIN = 10 // px
 const WATCH_DOM_CHANGES = true
-const TEXT_FIELD_SELECTOR =
-  'textarea[data-dictate-button-on]:not([data-dictate-button-enabled]), input[type="text"][data-dictate-button-on]:not([data-dictate-button-enabled])'
+const TEXT_FIELD_SELECTOR = [
+  'textarea[data-dictate-button-on]:not([data-dictate-button-enabled])',
+  'input[type="text"][data-dictate-button-on]:not([data-dictate-button-enabled])',
+  'input[type="search"][data-dictate-button-on]:not([data-dictate-button-enabled])',
+  'input[data-dictate-button-on]:not([type]):not([data-dictate-button-enabled])',
+].join(',')
 
 function injectDictateButton() {
   const textFields = document.querySelectorAll(TEXT_FIELD_SELECTOR)
@@ -20,7 +24,7 @@ function injectDictateButton() {
 
     container.appendChild(textField)
 
-    // Ensure textarea fills container
+    // Ensure textarea fills container.
     textField.style.boxSizing = 'border-box'
 
     // Add the dictate-button component.
@@ -47,8 +51,7 @@ function injectDictateButton() {
     })
     dictateBtn.addEventListener('recording:failed', (e) => {
       console.log('recording:failed', e)
-      // Focus on the field again.
-      textField.focus()
+      focusOnTextField(textField)
     })
 
     dictateBtn.addEventListener('transcribing:started', (e) => {
@@ -62,8 +65,7 @@ function injectDictateButton() {
     })
     dictateBtn.addEventListener('transcribing:failed', (e) => {
       console.log('transcribing:failed', e)
-      // Focus on the field again.
-      textField.focus()
+      focusOnTextField(textField)
     })
 
     container.appendChild(dictateBtn)
@@ -82,7 +84,9 @@ function calculateButtonPositionTop(container, textField) {
 }
 
 function receiveText(textField, text) {
-  const textToInsert = text.trim()
+  // Guard against non-string transcripts to avoid runtime errors.
+  const textToInsert =
+    typeof text === 'string' ? text.trim() : String(text ?? '').trim()
 
   // Ignore empty transcriptions.
   if (textToInsert.length === 0) {
@@ -93,16 +97,13 @@ function receiveText(textField, text) {
   const end = textField.selectionEnd || 0
 
   // Check if we need to add whitespace before the text.
-  const needsLeadingSpace =
-    start > 0 &&
-    !textField.value.substring(start - 1, start).match(/\s/) &&
-    !textToInsert.startsWith(' ')
+  const prevChar = start > 0 ? textField.value.charAt(start - 1) : ''
+  const needsLeadingSpace = prevChar && !/\s/.test(prevChar)
 
   // Check if we need to add whitespace after the text.
-  const needsTrailingSpace =
-    end < textField.value.length &&
-    !textField.value.substring(end, end + 1).match(/\s/) &&
-    !textToInsert.endsWith(' ')
+  const nextChar =
+    end < textField.value.length ? textField.value.charAt(end) : ''
+  const needsTrailingSpace = nextChar && !/\s/.test(nextChar)
 
   // Add whitespace as needed.
   const formattedText =
@@ -110,25 +111,41 @@ function receiveText(textField, text) {
     textToInsert +
     (needsTrailingSpace ? ' ' : '')
 
-  textField.value =
-    textField.value.substring(0, start) +
-    formattedText +
-    textField.value.substring(end)
-
-  // Restore caret position.
+  // Replace selection with the formatted text.
   const newCaretPos = start + formattedText.length
-  try {
-    textField.selectionStart = newCaretPos
-    textField.selectionEnd = newCaretPos
-  } catch (_) {
-    // Some inputs may not support selection; ignore safely.
+  const prevScrollTop =
+    typeof textField.scrollTop === 'number' ? textField.scrollTop : null
+  if (typeof textField.setRangeText === 'function') {
+    textField.setRangeText(formattedText, start, end, 'end')
+  } else {
+    textField.value =
+      textField.value.substring(0, start) +
+      formattedText +
+      textField.value.substring(end)
+    try {
+      textField.selectionStart = newCaretPos
+      textField.selectionEnd = newCaretPos
+    } catch (_) {
+      // Some inputs may not support selection; ignore safely.
+    }
+  }
+  if (prevScrollTop !== null) {
+    // Restore scroll to avoid jumpiness in large textareas.
+    textField.scrollTop = prevScrollTop
   }
 
   // Notify all listeners.
-  textField.dispatchEvent(new Event('input', { bubbles: true }))
+  textField.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
 
-  // Focus on the field again.
-  textField.focus()
+  focusOnTextField(textField)
+}
+
+function focusOnTextField(textField) {
+  try {
+    textField.focus({ preventScroll: true })
+  } catch (_) {
+    textField.focus()
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
