@@ -16,7 +16,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - Event-based API for interaction with your application
 - Built with SolidJS for optimal performance
 
-## Supported tags
+## Supported tags (by our inject scripts)
 
 - textarea
 - input[type="text"]
