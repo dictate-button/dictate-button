@@ -43,9 +43,7 @@ customElement(
     language: undefined,
   },
   (props: DictateButtonProps, { element }) => {
-    const { size, apiEndpoint, language } = props
-
-    console.debug('api', apiEndpoint)
+    console.debug('api', props.apiEndpoint)
 
     const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
 
@@ -172,11 +170,11 @@ customElement(
               formData.append('audio', audioBlob, 'recording.webm')
               formData.append('origin', window?.location?.origin)
 
-              if (language) {
-                formData.append('language', language)
+              if (props.language) {
+                formData.append('language', props.language)
               }
 
-              const response = await fetch(apiEndpoint!, {
+              const response = await fetch(props.apiEndpoint!, {
                 method: 'POST',
                 body: formData,
               })
@@ -238,7 +236,7 @@ customElement(
         <style>{dictateButtonStyles}</style>
         <button
           part="button"
-          style={`width:${size}px;height:${size}px"`}
+          style={`width:${props.size}px;height:${props.size}px"`}
           class="dictate-button__button"
           onClick={toggleRecording}
           title={buttonTitle(status())}

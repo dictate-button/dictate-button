@@ -36,10 +36,10 @@ function injectDictateButton() {
       calculateButtonPositionTop(container, textField) + 'px'
     dictateBtn.style.margin = BUTTON_MARGIN + 'px'
 
-    // Set document language as the dictate-button component's language.
+    // Set the document language as the dictate-button component's language if set.
     const lang = document.documentElement.lang
-    if (lang && lang.length === 2) {
-      dictateBtn.language = lang
+    if (lang && lang.length >= 2) {
+      dictateBtn.setAttribute('language', lang)
     }
 
     // Add event listeners for the dictate-button component.
