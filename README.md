@@ -15,6 +15,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - Dark and light theme support
 - Event-based API for interaction with your application
 - Built with SolidJS for optimal performance
+- Accessibility is ensured with ARIA attributes, high-contrast mode support, and clear keyboard focus states
 
 ## Supported tags (by our inject scripts)
 
