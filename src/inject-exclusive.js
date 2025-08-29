@@ -39,7 +39,7 @@ function injectDictateButton() {
     // Set the document language as the dictate-button component's language if set.
     const lang = document.documentElement.lang
     if (lang && lang.length >= 2) {
-      dictateBtn.setAttribute('language', lang)
+      dictateBtn.language = lang
     }
 
     // Add event listeners for the dictate-button component.
