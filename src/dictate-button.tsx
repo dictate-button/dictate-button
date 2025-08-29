@@ -240,6 +240,9 @@ customElement(
           class="dictate-button__button"
           onClick={toggleRecording}
           title={buttonTitle(status())}
+          aria-label={buttonAriaLabel(status())}
+          aria-pressed={status() === 'recording'}
+          aria-busy={status() === 'processing'}
         >
           {status() === 'idle' && <IdleIcon />}
           {status() === 'recording' && <RecordingIcon />}
@@ -261,6 +264,19 @@ const buttonTitle = (status: DictateButtonStatus) => {
       return `Stop processing (${APP_NAME})`
     case 'error':
       return `Click to reset (${APP_NAME})`
+  }
+}
+
+const buttonAriaLabel = (status: DictateButtonStatus) => {
+  switch (status) {
+    case 'idle':
+      return `Start dictation (${APP_NAME})`
+    case 'recording':
+      return `Dictation in progress. Click to stop it (${APP_NAME})`
+    case 'processing':
+      return `Processing dictation. Click to cancel it (${APP_NAME})`
+    case 'error':
+      return `Dictation error. Click to reset (${APP_NAME})`
   }
 }
 
