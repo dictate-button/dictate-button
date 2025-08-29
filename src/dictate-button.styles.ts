@@ -19,8 +19,18 @@ export const dictateButtonStyles = `
   transition: box-shadow 0.05s linear;
   box-sizing: border-box;
 }
-:host .dictate-button__button:hover, :host .dictate-button__button:focus {
+:host .dictate-button__button:hover {
   background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.6));
+}
+
+:host .dictate-button__button:focus {
+  background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.6));
+  outline: none;
+}
+
+:host .dictate-button__button:focus-visible {
+  outline: 2px solid light-dark(rgba(0, 0, 0, 0.8), rgba(255, 255, 255, 0.8));
+  outline-offset: 2px;
 }
 
 :host .dictate-button__button .dictate-button__icon {
