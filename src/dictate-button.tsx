@@ -299,6 +299,8 @@ const IdleIcon = () => (
     viewBox="0 0 24 24"
     stroke-width="1.5"
     stroke="currentColor"
+    role="img"
+    aria-hidden="true"
   >
     <path
       stroke-linecap="round"
@@ -315,6 +317,8 @@ const RecordingIcon = () => (
     class="dictate-button__icon dictate-button__icon--recording"
     viewBox="0 0 24 24"
     fill="currentColor"
+    role="img"
+    aria-hidden="true"
   >
     <circle cx="12" cy="12" r="10" />
   </svg>
@@ -328,10 +332,11 @@ const ProcessingIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    // stroke-width="2"
     stroke-width="1.5"
     stroke-linecap="round"
     stroke-linejoin="round"
+    role="img"
+    aria-hidden="true"
   >
     <path d="M12 2v4" />
     <path d="m16.2 7.8 2.9-2.9" />
@@ -355,6 +360,8 @@ const ErrorIcon = () => (
     stroke-width="4"
     stroke-linecap="round"
     stroke-linejoin="round"
+    role="img"
+    aria-hidden="true"
   >
     <line x1="12" x2="12" y1="4" y2="14" />
     <line x1="12" x2="12.01" y1="20" y2="20" />
