@@ -46,4 +46,13 @@ export const dictateButtonStyles = `
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+@media (forced-colors: active) {
+  :host .dictate-button__button {
+    border: 1px solid currentColor;
+  }
+  :host .dictate-button__button:focus-visible {
+    outline: 3px solid currentColor;
+  }
+}
 `
