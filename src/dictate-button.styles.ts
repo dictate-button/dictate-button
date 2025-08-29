@@ -12,19 +12,19 @@ export const dictateButtonStyles = `
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: light-dark(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.95));
-  background-color: light-dark(rgba(0, 0, 0, 0.05), rgba(255, 255, 255, 0.7));
+  color: light-dark(rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 1));
+  background-color: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.85));
   border-radius: 50%;
   border: none;
-  transition: box-shadow 0.05s linear;
+  transition: box-shadow 0.05s linear, background-color 0.2s ease;
   box-sizing: border-box;
 }
 :host .dictate-button__button:hover {
-  background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.6));
+  background-color: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.7));
 }
 
 :host .dictate-button__button:focus {
-  background-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.6));
+  background-color: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.7));
   outline: none;
 }
 
