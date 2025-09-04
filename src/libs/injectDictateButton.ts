@@ -23,6 +23,8 @@ export function injectDictateButton(
   for (const textField of textFields) {
     // Skip already processed fields.
     if (textField.hasAttribute('data-dictate-button-enabled')) continue
+    // Mark the field for idempotency.
+    textField.setAttribute('data-dictate-button-enabled', '')
 
     // Add a wrapper div with relative positioning.
     const container = document.createElement('div')
@@ -96,9 +98,6 @@ export function injectDictateButton(
     })
 
     container.appendChild(dictateBtn)
-
-    // Mark after successful insertion.
-    textField.setAttribute('data-dictate-button-enabled', '')
   }
 }
 
