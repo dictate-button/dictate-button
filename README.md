@@ -36,7 +36,7 @@ Choose the auto-inject mode that best suits your needs:
 | Inclusive | Enables for text fields without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
 
 Both auto-inject modes:
-- Automatically run when the DOM is loaded or immediately if DOM is already loaded
+- Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded)
 - Watch for DOM changes to apply dictate button to newly added elements
 - Set language attribute from document language if available
 
@@ -131,6 +131,8 @@ injectDictateButtonOnLoad(
   false                       // Verbose mode (optional, default: false)
 )
 ```
+
+Note: verbose controls console logging from the button event listeners.
 
 ## Events
 
