@@ -16,9 +16,9 @@ export function injectDictateButton(
   buttonMargin: number,
   verbose: boolean = false
 ) {
-  const textFields = document.querySelectorAll(textFieldSelector) as unknown as
-    | HTMLInputElement[]
-    | HTMLTextAreaElement[]
+  const textFields = document.querySelectorAll(textFieldSelector) as NodeListOf<
+    HTMLInputElement | HTMLTextAreaElement
+  >
 
   for (const textField of textFields) {
     // Add a wrapper div with relative positioning.

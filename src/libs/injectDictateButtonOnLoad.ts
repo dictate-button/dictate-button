@@ -1,9 +1,11 @@
 import { injectDictateButton } from './injectDictateButton'
 
 /**
- * Add a DOMContentLoaded event listener which injects the dictate-button component to text fields,
- * and optionally watch for DOM changes to re-inject the component.
- *
+ * Add a DOMContentLoaded event listener which injects the dictate-button component to text fields 
+ * or run it immediately if DOM is already loaded.
+ * 
+ * Optionally watch for DOM changes to re-inject the component.
+ * 
  * Optionally log button events to the console (verbose mode).
  *
  * @param {string} textFieldSelector
@@ -19,20 +21,23 @@ export function injectDictateButtonOnLoad(
   watchDomChanges: boolean = false,
   verbose: boolean = false
 ) {
-  document.addEventListener('DOMContentLoaded', () => {
+  const run = () => {
     injectDictateButton(textFieldSelector, buttonSize, buttonMargin, verbose)
-    if (watchDomChanges) {
-      new MutationObserver(() =>
+    if (watchDomChanges && document.body) {
+      const observer = new MutationObserver(() => {
         injectDictateButton(
           textFieldSelector,
           buttonSize,
           buttonMargin,
           verbose
         )
-      ).observe(document.body, {
-        childList: true,
-        subtree: true,
       })
+      observer.observe(document.body, { childList: true, subtree: true })
     }
-  })
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run, { once: true })
+  } else {
+    run()
+  }
 }
