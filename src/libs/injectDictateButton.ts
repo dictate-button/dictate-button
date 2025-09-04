@@ -21,15 +21,24 @@ export function injectDictateButton(
   >
 
   for (const textField of textFields) {
+    // Skip already processed fields and mark early for idempotency.
+    if (textField.hasAttribute('data-dictate-button-enabled')) continue
+    textField.setAttribute('data-dictate-button-enabled', '')
+
     // Add a wrapper div with relative positioning.
     const container = document.createElement('div')
     container.style.position = 'relative'
     container.style.display = 'inline-block'
     container.style.width = 'auto'
     container.style.color = 'inherit'
-    textField.parentNode?.insertBefore(container, textField)
 
-    textField.setAttribute('data-dictate-button-enabled', '')
+    const parent = textField.parentNode
+    if (!parent) {
+      verbose &&
+        console.warn('injectDictateButton: element has no parent', textField)
+      continue
+    }
+    parent.insertBefore(container, textField)
 
     container.appendChild(textField)
 
