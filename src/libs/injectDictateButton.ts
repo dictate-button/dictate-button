@@ -16,9 +16,9 @@ export function injectDictateButton(
   buttonMargin: number,
   verbose: boolean = false
 ) {
-  const textFields = document.querySelectorAll(textFieldSelector) as NodeListOf<
+  const textFields = document.querySelectorAll<
     HTMLInputElement | HTMLTextAreaElement
-  >
+  >(textFieldSelector)
 
   for (const textField of textFields) {
     // Skip already processed fields.
@@ -50,9 +50,8 @@ export function injectDictateButton(
     textField.style.boxSizing = 'border-box'
 
     // Add the dictate-button component.
-    const dictateBtn = document.createElement(
-      'dictate-button'
-    ) as unknown as HTMLElement & DictateButtonProps
+    const dictateBtn = document.createElement('dictate-button') as HTMLElement &
+      DictateButtonProps
     dictateBtn.size = buttonSize
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
@@ -64,7 +63,6 @@ export function injectDictateButton(
         buttonMargin
       ) + 'px'
     dictateBtn.style.margin = buttonMargin + 'px'
-    dictateBtn.style.zIndex = '1'
 
     // Set the document language as the dictate-button component's language if set.
     const lang = document.documentElement.lang
