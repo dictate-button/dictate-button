@@ -1,15 +1,24 @@
-const BUTTON_SIZE = 30 // px
-const BUTTON_MARGIN = 10 // px
-const WATCH_DOM_CHANGES = true
-const TEXT_FIELD_SELECTOR = [
-  'textarea[data-dictate-button-on]:not([data-dictate-button-enabled])',
-  'input[type="text"][data-dictate-button-on]:not([data-dictate-button-enabled])',
-  'input[type="search"][data-dictate-button-on]:not([data-dictate-button-enabled])',
-  'input[data-dictate-button-on]:not([type]):not([data-dictate-button-enabled])',
-].join(',')
+import type { DictateButtonProps } from '../dictate-button'
 
-function injectDictateButton() {
-  const textFields = document.querySelectorAll(TEXT_FIELD_SELECTOR)
+/**
+ * Inject the dictate-button component to text fields.
+ *
+ * Optionally log button events to the console (verbose mode).
+ *
+ * @param {string} textFieldSelector
+ * @param {number} buttonSize
+ * @param {number} buttonMargin
+ * @param {boolean} verbose
+ */
+export function injectDictateButton(
+  textFieldSelector: string,
+  buttonSize: number,
+  buttonMargin: number,
+  verbose: boolean = false
+) {
+  const textFields = document.querySelectorAll(textFieldSelector) as unknown as
+    | HTMLInputElement[]
+    | HTMLTextAreaElement[]
 
   for (const textField of textFields) {
     // Add a wrapper div with relative positioning.
@@ -18,7 +27,7 @@ function injectDictateButton() {
     container.style.display = 'inline-block'
     container.style.width = 'auto'
     container.style.color = 'inherit'
-    textField.parentNode.insertBefore(container, textField)
+    textField.parentNode?.insertBefore(container, textField)
 
     textField.setAttribute('data-dictate-button-enabled', '')
 
@@ -28,13 +37,19 @@ function injectDictateButton() {
     textField.style.boxSizing = 'border-box'
 
     // Add the dictate-button component.
-    const dictateBtn = document.createElement('dictate-button')
-    dictateBtn.size = BUTTON_SIZE
+    const dictateBtn = document.createElement('dictate-button') as HTMLElement &
+      DictateButtonProps
+    dictateBtn.size = buttonSize
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
     dictateBtn.style.top =
-      calculateButtonPositionTop(container, textField) + 'px'
-    dictateBtn.style.margin = BUTTON_MARGIN + 'px'
+      calculateButtonPositionTop(
+        container,
+        textField,
+        buttonSize,
+        buttonMargin
+      ) + 'px'
+    dictateBtn.style.margin = buttonMargin + 'px'
 
     // Set the document language as the dictate-button component's language if set.
     const lang = document.documentElement.lang
@@ -44,27 +59,26 @@ function injectDictateButton() {
 
     // Add event listeners for the dictate-button component.
     dictateBtn.addEventListener('recording:started', (e) => {
-      console.log('recording:started', e)
+      verbose && console.log('recording:started', e)
     })
     dictateBtn.addEventListener('recording:stopped', (e) => {
-      console.log('recording:stopped', e)
+      verbose && console.log('recording:stopped', e)
     })
     dictateBtn.addEventListener('recording:failed', (e) => {
-      console.log('recording:failed', e)
+      verbose && console.log('recording:failed', e)
       focusOnTextField(textField)
     })
 
     dictateBtn.addEventListener('transcribing:started', (e) => {
-      console.log('transcribing:started', e)
+      verbose && console.log('transcribing:started', e)
     })
-    dictateBtn.addEventListener('transcribing:finished', (e) => {
-      console.log('transcribing:finished', e)
-      const customEvent = e
-      const text = customEvent.detail
+    dictateBtn.addEventListener('transcribing:finished', (e: any) => {
+      verbose && console.log('transcribing:finished', e)
+      const text = e.detail
       receiveText(textField, text)
     })
     dictateBtn.addEventListener('transcribing:failed', (e) => {
-      console.log('transcribing:failed', e)
+      verbose && console.log('transcribing:failed', e)
       focusOnTextField(textField)
     })
 
@@ -72,18 +86,26 @@ function injectDictateButton() {
   }
 }
 
-function calculateButtonPositionTop(container, textField) {
+function calculateButtonPositionTop(
+  container: HTMLDivElement,
+  textField: HTMLInputElement | HTMLTextAreaElement,
+  buttonSize: number,
+  buttonMargin: number
+) {
   if (textField.tagName.toLowerCase() === 'textarea') {
     return 0
   }
 
   const calculatedTop = Math.round(
-    container.clientHeight / 2 - BUTTON_SIZE / 2 - BUTTON_MARGIN
+    container.clientHeight / 2 - buttonSize / 2 - buttonMargin
   )
   return Math.max(0, calculatedTop)
 }
 
-function receiveText(textField, text) {
+function receiveText(
+  textField: HTMLInputElement | HTMLTextAreaElement,
+  text: string
+) {
   // Guard against non-string transcripts to avoid runtime errors.
   const textToInsert =
     typeof text === 'string' ? text.trim() : String(text ?? '').trim()
@@ -140,20 +162,10 @@ function receiveText(textField, text) {
   focusOnTextField(textField)
 }
 
-function focusOnTextField(textField) {
+function focusOnTextField(textField: HTMLInputElement | HTMLTextAreaElement) {
   try {
     textField.focus({ preventScroll: true })
   } catch (_) {
     textField.focus()
   }
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  injectDictateButton()
-  if (WATCH_DOM_CHANGES) {
-    new MutationObserver(injectDictateButton).observe(document.body, {
-      childList: true,
-      subtree: true,
-    })
-  }
-})

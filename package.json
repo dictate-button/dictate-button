@@ -25,6 +25,21 @@
       "import": "./dist/dictate-button.js",
       "default": "./dist/dictate-button.js"
     },
+    "./libs": {
+      "types": "./dist/libs/index.d.ts",
+      "import": "./dist/libs/index.js",
+      "default": "./dist/libs/index.js"
+    },
+    "./libs/injectDictateButton": {
+      "types": "./dist/libs/injectDictateButton.d.ts",
+      "import": "./dist/libs/injectDictateButton.js",
+      "default": "./dist/libs/injectDictateButton.js"
+    },
+    "./libs/injectDictateButtonOnLoad": {
+      "types": "./dist/libs/injectDictateButtonOnLoad.d.ts",
+      "import": "./dist/libs/injectDictateButtonOnLoad.js",
+      "default": "./dist/libs/injectDictateButtonOnLoad.js"
+    },
     "./inject-exclusive": {
       "types": "./dist/inject-exclusive.d.ts",
       "import": "./dist/inject-exclusive.js",
