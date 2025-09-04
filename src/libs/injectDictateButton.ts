@@ -87,7 +87,7 @@ export function injectDictateButton(
     })
     dictateBtn.addEventListener('transcribing:finished', (e) => {
       verbose && console.log('transcribing:finished', e)
-      const text = (e as CustomEvent<unknown>).detail
+      const text = (e as CustomEvent<string>).detail
       receiveText(textField, text)
     })
     dictateBtn.addEventListener('transcribing:failed', (e) => {
