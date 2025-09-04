@@ -117,20 +117,26 @@ import { injectDictateButton, injectDictateButtonOnLoad } from 'dictate-button/l
 // Inject dictate buttons immediately to matching elements
 injectDictateButton(
   'textarea.custom-selector', // CSS selector for target elements
-  30,                         // Button size in pixels
-  10,                         // Button margin in pixels
-  false                       // Verbose mode (optional, default: false)
+  {
+    buttonSize: 30,           // Button size in pixels
+    buttonMargin: 10,         // Button margin in pixels
+    verbose: false            // Log events to console (optional, default: false)
+  }
 )
 
 // Inject on DOM load with mutation observer to catch dynamically added elements
 injectDictateButtonOnLoad(
   'input.custom-selector',    // CSS selector for target elements
-  30,                         // Button size in pixels
-  10,                         // Button margin in pixels
-  true,                       // Watch DOM changes (optional, default: false)
-  false                       // Verbose mode (optional, default: false)
+  {
+    buttonSize: 30,           // Button size in pixels
+    buttonMargin: 10,         // Button margin in pixels
+    watchDomChanges: true,    // Watch for DOM changes (optional, default: false)
+    verbose: false            // Log events to console (optional, default: false)
+  }
 )
 ```
+
+You can also specify a custom API endpoint by adding `customApiEndpoint` to the options object.
 
 Note: verbose controls console logging from the button event listeners.
 

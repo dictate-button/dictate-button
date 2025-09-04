@@ -1,21 +1,38 @@
 import type { DictateButtonProps } from '../dictate-button'
 
 /**
+ * Options for the dictate button injection.
+ */
+export interface InjectDictateButtonOptions {
+  /** Size of the button in pixels */
+  buttonSize: number
+  /** Margin around the button in pixels */
+  buttonMargin: number
+  /** Whether to log events to console */
+  verbose?: boolean
+  /** Optional custom API endpoint */
+  customApiEndpoint?: string
+}
+
+/**
  * Inject the dictate-button component to text fields.
  *
  * Optionally log button events to the console (verbose mode).
  *
- * @param {string} textFieldSelector
- * @param {number} buttonSize
- * @param {number} buttonMargin
- * @param {boolean} verbose
+ * @param {string} textFieldSelector - CSS selector for text fields to enhance
+ * @param {InjectDictateButtonOptions} options - Configuration options
  */
 export function injectDictateButton(
   textFieldSelector: string,
-  buttonSize: number,
-  buttonMargin: number,
-  verbose: boolean = false
+  options: InjectDictateButtonOptions
 ) {
+  const {
+    buttonSize = 30,
+    buttonMargin = 10,
+    verbose = false,
+    customApiEndpoint,
+  } = options
+
   const textFields = document.querySelectorAll<
     HTMLInputElement | HTMLTextAreaElement
   >(textFieldSelector)
@@ -23,25 +40,28 @@ export function injectDictateButton(
   for (const textField of textFields) {
     // Skip already processed fields.
     if (textField.hasAttribute('data-dictate-button-enabled')) continue
-    // Mark the field for idempotency.
+
+    // Skip detached nodes to avoid false-positive marking.
+    const parent = textField.parentNode
+    if (!textField.isConnected || !parent) {
+      if (verbose) {
+        console.debug('injectDictateButton: skipping detached field', textField)
+      }
+      continue
+    }
+
+    // Mark early for idempotency once we know we can insert.
     textField.setAttribute('data-dictate-button-enabled', '')
 
     // Add a wrapper div with relative positioning.
     const container = document.createElement('div')
     container.style.position = 'relative'
-
     // Preserve block-level layouts (100% width inputs/textareas).
     const isBlock = getComputedStyle(textField).display === 'block'
     container.style.display = isBlock ? 'block' : 'inline-block'
     container.style.width = isBlock ? '100%' : 'auto'
-
     container.style.color = 'inherit'
 
-    const parent = textField.parentNode
-    if (!parent) {
-      console.warn('injectDictateButton: text field has no parent', textField)
-      continue
-    }
     parent.insertBefore(container, textField)
 
     container.appendChild(textField)
@@ -70,6 +90,9 @@ export function injectDictateButton(
         buttonMargin
       ) + 'px'
     dictateBtn.style.margin = buttonMargin + 'px'
+    if (customApiEndpoint) {
+      dictateBtn.apiEndpoint = customApiEndpoint
+    }
 
     // Set the document language as the dictate-button component's language if set.
     const lang = document.documentElement.lang

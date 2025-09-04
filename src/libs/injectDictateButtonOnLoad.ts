@@ -1,4 +1,16 @@
-import { injectDictateButton } from './injectDictateButton'
+import {
+  injectDictateButton,
+  InjectDictateButtonOptions,
+} from './injectDictateButton'
+
+/**
+ * Options for injecting the dictate button on load, extends the base options.
+ */
+export interface InjectDictateButtonOnLoadOptions
+  extends InjectDictateButtonOptions {
+  /** Whether to watch for DOM changes and re-inject the component */
+  watchDomChanges?: boolean
+}
 
 /**
  * Add a DOMContentLoaded event listener which injects the dictate-button component to text fields
@@ -8,29 +20,20 @@ import { injectDictateButton } from './injectDictateButton'
  *
  * Optionally log button events to the console (verbose mode).
  *
- * @param {string} textFieldSelector
- * @param {number} buttonSize
- * @param {number} buttonMargin
- * @param {boolean} watchDomChanges
- * @param {boolean} verbose
+ * @param {string} textFieldSelector - CSS selector for text fields to enhance
+ * @param {InjectDictateButtonOnLoadOptions} options - Configuration options
  */
 export function injectDictateButtonOnLoad(
   textFieldSelector: string,
-  buttonSize: number,
-  buttonMargin: number,
-  watchDomChanges: boolean = false,
-  verbose: boolean = false
+  options: InjectDictateButtonOnLoadOptions
 ) {
+  const { watchDomChanges = false } = options
+
   const run = () => {
-    injectDictateButton(textFieldSelector, buttonSize, buttonMargin, verbose)
+    injectDictateButton(textFieldSelector, options)
     if (watchDomChanges && document.body) {
       const observer = new MutationObserver(() => {
-        injectDictateButton(
-          textFieldSelector,
-          buttonSize,
-          buttonMargin,
-          verbose
-        )
+        injectDictateButton(textFieldSelector, options)
       })
       observer.observe(document.body, { childList: true, subtree: true })
     }

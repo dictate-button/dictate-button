@@ -11,10 +11,9 @@ const TEXT_FIELD_SELECTOR = [
   'input:not([type]):not([data-dictate-button-off]):not([data-dictate-button-enabled])',
 ].join(',')
 
-injectDictateButtonOnLoad(
-  TEXT_FIELD_SELECTOR,
-  BUTTON_SIZE,
-  BUTTON_MARGIN,
-  WATCH_DOM_CHANGES,
-  VERBOSE
-)
+injectDictateButtonOnLoad(TEXT_FIELD_SELECTOR, {
+  buttonSize: BUTTON_SIZE,
+  buttonMargin: BUTTON_MARGIN,
+  watchDomChanges: WATCH_DOM_CHANGES,
+  verbose: VERBOSE,
+})
