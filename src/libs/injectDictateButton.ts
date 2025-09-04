@@ -34,8 +34,7 @@ export function injectDictateButton(
 
     const parent = textField.parentNode
     if (!parent) {
-      verbose &&
-        console.warn('injectDictateButton: element has no parent', textField)
+      console.warn('injectDictateButton: text field has no parent', textField)
       continue
     }
     parent.insertBefore(container, textField)
