@@ -45,8 +45,9 @@ export function injectDictateButton(
     textField.style.boxSizing = 'border-box'
 
     // Add the dictate-button component.
-    const dictateBtn = document.createElement('dictate-button') as HTMLElement &
-      DictateButtonProps
+    const dictateBtn = document.createElement(
+      'dictate-button'
+    ) as unknown as HTMLElement & DictateButtonProps
     dictateBtn.size = buttonSize
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
