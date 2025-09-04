@@ -1,2 +1,2 @@
-export * from './injectDictateButton'
-export * from './injectDictateButtonOnLoad'
+export { injectDictateButton } from './injectDictateButton'
+export { injectDictateButtonOnLoad } from './injectDictateButtonOnLoad'
