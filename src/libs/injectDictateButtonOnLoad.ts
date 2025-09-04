@@ -1,11 +1,11 @@
 import { injectDictateButton } from './injectDictateButton'
 
 /**
- * Add a DOMContentLoaded event listener which injects the dictate-button component to text fields 
+ * Add a DOMContentLoaded event listener which injects the dictate-button component to text fields
  * or run it immediately if DOM is already loaded.
- * 
+ *
  * Optionally watch for DOM changes to re-inject the component.
- * 
+ *
  * Optionally log button events to the console (verbose mode).
  *
  * @param {string} textFieldSelector
