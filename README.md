@@ -22,7 +22,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - textarea
 - input[type="text"]
 - input[type="search"]
-- input
+- input (without a type)
 
 ## Usage
 
@@ -34,6 +34,11 @@ Choose the auto-inject mode that best suits your needs:
 |---|---|---|
 | Exclusive | Enables for text fields with the `data-dictate-button-on` attribute only. | `inject-exclusive.js` |
 | Inclusive | Enables for text fields without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
+
+Both auto-inject modes:
+- Automatically run when the DOM is loaded or immediately if DOM is already loaded
+- Watch for DOM changes to apply dictate button to newly added elements
+- Set language attribute from document language if available
 
 ### From CDN
 
@@ -101,6 +106,31 @@ import 'dictate-button/inject-inclusive'
 ```
 
 To choose between **exclusive** and **inclusive** auto-inject modes, see the [Auto-inject modes](#auto-inject-modes) section.
+
+### Advanced usage with library functions
+
+If you need more control over when and how the dictate buttons are injected, you can use the library functions directly:
+
+```js
+import { injectDictateButton, injectDictateButtonOnLoad } from 'dictate-button/libs'
+
+// Inject dictate buttons immediately to matching elements
+injectDictateButton(
+  'textarea.custom-selector', // CSS selector for target elements
+  30,                         // Button size in pixels
+  10,                         // Button margin in pixels
+  false                       // Verbose mode (optional, default: false)
+)
+
+// Inject on DOM load with mutation observer to catch dynamically added elements
+injectDictateButtonOnLoad(
+  'input.custom-selector',    // CSS selector for target elements
+  30,                         // Button size in pixels
+  10,                         // Button margin in pixels
+  true,                       // Watch DOM changes (optional, default: false)
+  false                       // Verbose mode (optional, default: false)
+)
+```
 
 ## Events
 
