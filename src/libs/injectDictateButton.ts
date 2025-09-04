@@ -21,15 +21,18 @@ export function injectDictateButton(
   >
 
   for (const textField of textFields) {
-    // Skip already processed fields and mark early for idempotency.
+    // Skip already processed fields.
     if (textField.hasAttribute('data-dictate-button-enabled')) continue
-    textField.setAttribute('data-dictate-button-enabled', '')
 
     // Add a wrapper div with relative positioning.
     const container = document.createElement('div')
     container.style.position = 'relative'
-    container.style.display = 'inline-block'
-    container.style.width = 'auto'
+
+    // Preserve block-level layouts (100% width inputs/textareas).
+    const isBlock = getComputedStyle(textField).display === 'block'
+    container.style.display = isBlock ? 'block' : 'inline-block'
+    container.style.width = isBlock ? '100%' : 'auto'
+
     container.style.color = 'inherit'
 
     const parent = textField.parentNode
@@ -59,6 +62,7 @@ export function injectDictateButton(
         buttonMargin
       ) + 'px'
     dictateBtn.style.margin = buttonMargin + 'px'
+    dictateBtn.style.zIndex = '1'
 
     // Set the document language as the dictate-button component's language if set.
     const lang = document.documentElement.lang
@@ -81,9 +85,9 @@ export function injectDictateButton(
     dictateBtn.addEventListener('transcribing:started', (e) => {
       verbose && console.log('transcribing:started', e)
     })
-    dictateBtn.addEventListener('transcribing:finished', (e: any) => {
+    dictateBtn.addEventListener('transcribing:finished', (e) => {
       verbose && console.log('transcribing:finished', e)
-      const text = e.detail
+      const text = (e as CustomEvent<unknown>).detail
       receiveText(textField, text)
     })
     dictateBtn.addEventListener('transcribing:failed', (e) => {
@@ -92,6 +96,9 @@ export function injectDictateButton(
     })
 
     container.appendChild(dictateBtn)
+
+    // Mark after successful insertion.
+    textField.setAttribute('data-dictate-button-enabled', '')
   }
 }
 
@@ -113,7 +120,7 @@ function calculateButtonPositionTop(
 
 function receiveText(
   textField: HTMLInputElement | HTMLTextAreaElement,
-  text: string
+  text: unknown
 ) {
   // Guard against non-string transcripts to avoid runtime errors.
   const textToInsert =
