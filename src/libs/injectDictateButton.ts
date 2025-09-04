@@ -46,8 +46,15 @@ export function injectDictateButton(
 
     container.appendChild(textField)
 
-    // Ensure textarea fills container.
+    // Ensure text field fills the container.
     textField.style.boxSizing = 'border-box'
+
+    // Prevent text from being obscured by the button.
+    const existingRightPadding = parseFloat(
+      getComputedStyle(textField).paddingRight || '0'
+    )
+    const fullButtonSize = buttonSize + buttonMargin * 2
+    textField.style.paddingRight = `${existingRightPadding + fullButtonSize}px`
 
     // Add the dictate-button component.
     const dictateBtn = document.createElement('dictate-button') as HTMLElement &
