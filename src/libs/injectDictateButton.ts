@@ -24,7 +24,7 @@ export interface InjectDictateButtonOptions {
  */
 export function injectDictateButton(
   textFieldSelector: string,
-  options: InjectDictateButtonOptions
+  options: InjectDictateButtonOptions = {}
 ) {
   const {
     buttonSize = 30,

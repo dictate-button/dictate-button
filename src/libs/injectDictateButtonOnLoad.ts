@@ -25,7 +25,7 @@ export interface InjectDictateButtonOnLoadOptions
  */
 export function injectDictateButtonOnLoad(
   textFieldSelector: string,
-  options: InjectDictateButtonOnLoadOptions
+  options: InjectDictateButtonOnLoadOptions = {}
 ) {
   const { watchDomChanges = false } = options
 
