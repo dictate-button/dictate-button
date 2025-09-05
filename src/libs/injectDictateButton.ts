@@ -98,10 +98,13 @@ export function injectDictateButton(
       dictateBtn.apiEndpoint = customApiEndpoint
     }
 
-    // Set the document language as the dictate-button component's language if set.
-    const lang = document.documentElement.lang
+    // Set the document language or navigator language as the dictate-button component's language if set.
+    const lang = document.documentElement.lang || navigator.language || ''
     if (lang && lang.length >= 2) {
-      dictateBtn.language = lang
+      // We need to convert the larger language code "en-US" to "en" for the dictate-button API,
+      // which only accepts "en" as the language code.
+      const locale = new Intl.Locale(lang)
+      dictateBtn.language = locale.language
     }
 
     // Add event listeners for the dictate-button component.
@@ -162,8 +165,8 @@ function receiveText(
     return
   }
 
-  const start = textField.selectionStart || 0
-  const end = textField.selectionEnd || 0
+  const start = textField.selectionStart ?? 0
+  const end = textField.selectionEnd ?? 0
 
   // Check if we need to add whitespace before the text.
   const prevChar = start > 0 ? textField.value.charAt(start - 1) : ''
