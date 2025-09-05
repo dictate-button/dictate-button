@@ -57,14 +57,18 @@ export function injectDictateButton(
     const container = document.createElement('div')
     container.style.position = 'relative'
     // Preserve block-level layouts (100% width inputs/textareas).
-    const isBlock = getComputedStyle(textField).display === 'block'
+    const csField = getComputedStyle(textField)
+    const isBlock = csField.display === 'block'
     container.style.display = isBlock ? 'block' : 'inline-block'
     container.style.width = isBlock ? '100%' : 'auto'
     container.style.color = 'inherit'
 
     parent.insertBefore(container, textField)
-
     container.appendChild(textField)
+
+    // Mirror margins to wrapper to keep external spacing the same.
+    container.style.margin = csField.margin
+    textField.style.margin = '0'
 
     // Ensure text field fills the container.
     textField.style.boxSizing = 'border-box'
