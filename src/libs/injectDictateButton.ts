@@ -102,26 +102,26 @@ export function injectDictateButton(
 
     // Add event listeners for the dictate-button component.
     dictateBtn.addEventListener('recording:started', (e) => {
-      verbose && console.log('recording:started', e)
+      verbose && console.debug('recording:started', e)
     })
     dictateBtn.addEventListener('recording:stopped', (e) => {
-      verbose && console.log('recording:stopped', e)
+      verbose && console.debug('recording:stopped', e)
     })
     dictateBtn.addEventListener('recording:failed', (e) => {
-      verbose && console.log('recording:failed', e)
+      verbose && console.debug('recording:failed', e)
       focusOnTextField(textField)
     })
 
     dictateBtn.addEventListener('transcribing:started', (e) => {
-      verbose && console.log('transcribing:started', e)
+      verbose && console.debug('transcribing:started', e)
     })
     dictateBtn.addEventListener('transcribing:finished', (e) => {
-      verbose && console.log('transcribing:finished', e)
+      verbose && console.debug('transcribing:finished', e)
       const text = (e as CustomEvent<string>).detail
       receiveText(textField, text)
     })
     dictateBtn.addEventListener('transcribing:failed', (e) => {
-      verbose && console.log('transcribing:failed', e)
+      verbose && console.debug('transcribing:failed', e)
       focusOnTextField(textField)
     })
 
