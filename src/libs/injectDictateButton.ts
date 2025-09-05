@@ -74,9 +74,7 @@ export function injectDictateButton(
     textField.style.boxSizing = 'border-box'
 
     // Prevent text from being obscured by the button.
-    const existingRightPadding = parseFloat(
-      getComputedStyle(textField).paddingRight || '0'
-    )
+    const existingRightPadding = parseFloat(csField.paddingRight || '0')
     const fullButtonSize = buttonSize + buttonMargin * 1
     textField.style.paddingRight = `${existingRightPadding + fullButtonSize}px`
 
