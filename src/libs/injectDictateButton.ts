@@ -73,7 +73,7 @@ export function injectDictateButton(
     const existingRightPadding = parseFloat(
       getComputedStyle(textField).paddingRight || '0'
     )
-    const fullButtonSize = buttonSize + buttonMargin * 2
+    const fullButtonSize = buttonSize + buttonMargin * 1
     textField.style.paddingRight = `${existingRightPadding + fullButtonSize}px`
 
     // Add the dictate-button component.
