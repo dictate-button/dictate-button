@@ -4,10 +4,10 @@ import type { DictateButtonProps } from '../dictate-button'
  * Options for the dictate button injection.
  */
 export interface InjectDictateButtonOptions {
-  /** Size of the button in pixels */
-  buttonSize: number
-  /** Margin around the button in pixels */
-  buttonMargin: number
+  /** Size of the button in pixels; defaults to 30 */
+  buttonSize?: number
+  /** Margin around the button in pixels; defaults to 10 */
+  buttonMargin?: number
   /** Whether to log events to console */
   verbose?: boolean
   /** Optional custom API endpoint */
