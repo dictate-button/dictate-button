@@ -22,7 +22,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - textarea
 - input[type="text"]
 - input[type="search"]
-- input (without a type)
+- input (without a type; defaults to text)
 
 ## Usage
 
@@ -36,9 +36,9 @@ Choose the auto-inject mode that best suits your needs:
 | Inclusive | Enables for text fields without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
 
 Both auto-inject modes:
-- Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded)
-- Watch for DOM changes to apply dictate button to newly added elements
-- Set language attribute from document language or browser language if available
+- Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded).
+- Watch for DOM changes to apply the dictate button to newly added elements.
+- Set the button’s language from `document.documentElement.lang` (if present) or fall back to `navigator.language`.
 
 ### From CDN
 
@@ -51,11 +51,13 @@ In your HTML `<head>` tag, add the following script tags:
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.js"></script>
 ```
 
-Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text]` elements where you want the dictate button to appear:
+Add the `data-dictate-button-on` attribute to any `textarea`, `input[type="text"]`, `input[type="search"]`, or `input` without a `type` attribute:
 
 ```html
 <textarea data-dictate-button-on></textarea>
 <input type="text" data-dictate-button-on />
+<input type="search" data-dictate-button-on />
+<input data-dictate-button-on />
 ```
 
 #### Option 2: Using the inclusive auto-inject script
@@ -67,13 +69,15 @@ In your HTML `<head>` tag, add the following script tags:
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.js"></script>
 ```
 
-All `textarea` and `input[type=text]` elements without the `data-dictate-button-off` attribute will be automatically enhanced with the dictate button by default.
+All `textarea`, `input[type="text"]`, `input[type="search"]`, and `input` elements without a `type` attribute that lack `data-dictate-button-off` will be automatically enhanced by default.
 
 To disable that for a specific field, add the `data-dictate-button-off` attribute to it this way:
 
 ```html
 <textarea data-dictate-button-off></textarea>
 <input type="text" data-dictate-button-off />
+<input type="search" data-dictate-button-off />
+<input data-dictate-button-off />
 ```
 
 #### Option 3: Manual integration
@@ -120,7 +124,8 @@ injectDictateButton(
   {
     buttonSize: 30,           // Button size in pixels
     buttonMargin: 10,         // Button margin in pixels
-    verbose: false            // Log events to console (optional, default: false)
+    verbose: false,           // Log events to console (optional, default: false)
+    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
   }
 )
 
@@ -131,7 +136,8 @@ injectDictateButtonOnLoad(
     buttonSize: 30,           // Button size in pixels
     buttonMargin: 10,         // Button margin in pixels
     watchDomChanges: true,    // Watch for DOM changes (optional, default: false)
-    verbose: false            // Log events to console (optional, default: false)
+    verbose: false,           // Log events to console (optional, default: false)
+    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
   }
 )
 ```
