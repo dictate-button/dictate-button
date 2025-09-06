@@ -26,11 +26,7 @@ export function injectDictateButton(
   textFieldSelector: string,
   options: InjectDictateButtonOptions = {}
 ) {
-  const {
-    buttonSize = 30,
-    verbose = false,
-    customApiEndpoint,
-  } = options
+  const { buttonSize = 30, verbose = false, customApiEndpoint } = options
 
   const textFields = document.querySelectorAll<
     HTMLInputElement | HTMLTextAreaElement
@@ -100,14 +96,8 @@ export function injectDictateButton(
       dictateBtn.apiEndpoint = customApiEndpoint
     }
 
-    // Set the document language as the dictate-button component's language if set.
-    const lang = document.documentElement.lang
-    if (lang && lang.length >= 2) {
-      // We need to convert the larger language code "en-US" to "en" for the dictate-button API,
-      // which only accepts "en" as the language code.
-      const locale = new Intl.Locale(lang)
-      dictateBtn.language = locale.language
-    }
+    // Set the normalized document language as the dictate-button component's language if set.
+    dictateBtn.language = getDocumentLanguage()
 
     // Add event listeners for the dictate-button component.
     dictateBtn.addEventListener('recording:started', (e) => {
@@ -135,6 +125,20 @@ export function injectDictateButton(
     })
 
     wrapper.appendChild(dictateBtn)
+  }
+}
+
+function getDocumentLanguage(): string | undefined {
+  const lang = document.documentElement.lang
+  if (lang && lang.length >= 2) {
+    // Convert "en-US" → "en" with robust fallback when Intl.Locale is missing or lang is invalid.
+    try {
+      const hasIntlLocale = (Intl as any)?.Locale
+      const locale = hasIntlLocale ? new Intl.Locale(lang) : null
+      return locale?.language ?? lang.split(/[-_]/)[0].toLowerCase()
+    } catch {
+      return lang.split(/[-_]/)[0].toLowerCase()
+    }
   }
 }
 

@@ -38,7 +38,7 @@ Choose the auto-inject mode that best suits your needs:
 Both auto-inject modes:
 - Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded).
 - Watch for DOM changes to apply the dictate button to newly added elements.
-- Set the button’s language from `document.documentElement.lang` (if present).
+- Set the button’s language from `document.documentElement.lang` (if present). Long codes like `en-GB` are normalized to `en`.
 
 ### From CDN
 
@@ -115,6 +115,9 @@ To choose between **exclusive** and **inclusive** auto-inject modes, see the [Au
 
 If you need more control over when and how the dictate buttons are injected, you can use the library functions directly:
 
+Tip: You can also import from subpaths (e.g., 'dictate-button/libs/injectDictateButton')
+for smaller bundles, if your bundler resolves package subpath exports.
+
 ```js
 import { injectDictateButton, injectDictateButtonOnLoad } from 'dictate-button/libs'
 
@@ -142,6 +145,7 @@ injectDictateButtonOnLoad(
 
 Note: the injector mirrors the target field’s display/margins into the wrapper, 
 sets wrapper width to 100% for block-level fields, and adds padding to avoid the button overlapping text.
+The wrapper also has the `dictate-button-wrapper` class for easy styling.
 
 ## Events
 
