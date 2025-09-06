@@ -26,8 +26,12 @@ export default defineConfig({
     lib: {
       entry: {
         'dictate-button': 'src/dictate-button.tsx',
-        'inject-exclusive': 'src/inject-exclusive.js',
-        'inject-inclusive': 'src/inject-inclusive.js',
+        libs: 'src/libs/index.ts',
+        'libs/injectDictateButton': 'src/libs/injectDictateButton.ts',
+        'libs/injectDictateButtonOnLoad':
+          'src/libs/injectDictateButtonOnLoad.ts',
+        'inject-exclusive': 'src/inject-exclusive.ts',
+        'inject-inclusive': 'src/inject-inclusive.ts',
       },
       formats: ['es'],
     },

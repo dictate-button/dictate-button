@@ -22,7 +22,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - textarea
 - input[type="text"]
 - input[type="search"]
-- input
+- input (without a type; defaults to text)
 
 ## Usage
 
@@ -35,6 +35,11 @@ Choose the auto-inject mode that best suits your needs:
 | Exclusive | Enables for text fields with the `data-dictate-button-on` attribute only. | `inject-exclusive.js` |
 | Inclusive | Enables for text fields without the `data-dictate-button-off` attribute. | `inject-inclusive.js` |
 
+Both auto-inject modes:
+- Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded).
+- Watch for DOM changes to apply the dictate button to newly added elements.
+- Set the button’s language from `document.documentElement.lang` (if present). Long codes like `en-GB` are normalized to `en`.
+
 ### From CDN
 
 #### Option 1: Using the exclusive auto-inject script
@@ -46,11 +51,13 @@ In your HTML `<head>` tag, add the following script tags:
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.js"></script>
 ```
 
-Add the `data-dictate-button-on` attribute to any `textarea` or `input[type=text]` elements where you want the dictate button to appear:
+Add the `data-dictate-button-on` attribute to any `textarea`, `input[type="text"]`, `input[type="search"]`, or `input` without a `type` attribute:
 
 ```html
 <textarea data-dictate-button-on></textarea>
 <input type="text" data-dictate-button-on />
+<input type="search" data-dictate-button-on />
+<input data-dictate-button-on />
 ```
 
 #### Option 2: Using the inclusive auto-inject script
@@ -62,13 +69,15 @@ In your HTML `<head>` tag, add the following script tags:
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.js"></script>
 ```
 
-All `textarea` and `input[type=text]` elements without the `data-dictate-button-off` attribute will be automatically enhanced with the dictate button by default.
+All `textarea`, `input[type="text"]`, `input[type="search"]`, and `input` elements without a `type` attribute that lack `data-dictate-button-off` will be automatically enhanced by default.
 
 To disable that for a specific field, add the `data-dictate-button-off` attribute to it this way:
 
 ```html
 <textarea data-dictate-button-off></textarea>
 <input type="text" data-dictate-button-off />
+<input type="search" data-dictate-button-off />
+<input data-dictate-button-off />
 ```
 
 #### Option 3: Manual integration
@@ -101,6 +110,42 @@ import 'dictate-button/inject-inclusive'
 ```
 
 To choose between **exclusive** and **inclusive** auto-inject modes, see the [Auto-inject modes](#auto-inject-modes) section.
+
+### Advanced usage with library functions
+
+If you need more control over when and how the dictate buttons are injected, you can use the library functions directly:
+
+Tip: You can also import from subpaths (e.g., 'dictate-button/libs/injectDictateButton')
+for smaller bundles, if your bundler resolves package subpath exports.
+
+```js
+import { injectDictateButton, injectDictateButtonOnLoad } from 'dictate-button/libs'
+
+// Inject dictate buttons immediately to matching elements
+injectDictateButton(
+  'textarea.custom-selector', // CSS selector for target elements
+  {
+    buttonSize: 30,           // Button size in pixels (optional; default: 30)
+    verbose: false,           // Log events to console (optional; default: false)
+    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
+  }
+)
+
+// Inject on DOM load with mutation observer to catch dynamically added elements
+injectDictateButtonOnLoad(
+  'input.custom-selector',    // CSS selector for target elements
+  {
+    buttonSize: 30,           // Button size in pixels (optional; default: 30)
+    watchDomChanges: true,    // Watch for DOM changes (optional; default: false)
+    verbose: false,           // Log events to console (optional; default: false)
+    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
+  }
+)
+```
+
+Note: the injector mirrors the target field’s display/margins into the wrapper, 
+sets wrapper width to 100% for block-level fields, and adds padding to avoid the button overlapping text.
+The wrapper also has the `dictate-button-wrapper` class for easy styling.
 
 ## Events
 
