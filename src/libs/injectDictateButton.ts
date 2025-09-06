@@ -54,20 +54,21 @@ export function injectDictateButton(
     textField.setAttribute('data-dictate-button-enabled', '')
 
     // Add a wrapper div with relative positioning.
-    const container = document.createElement('div')
-    container.style.position = 'relative'
+    const wrapper = document.createElement('div')
+    wrapper.style.position = 'relative'
     // Preserve block-level layouts (100% width inputs/textareas).
     const csField = getComputedStyle(textField)
     const isBlock = csField.display === 'block'
-    container.style.display = isBlock ? 'block' : 'inline-block'
-    container.style.width = isBlock ? '100%' : 'auto'
-    container.style.color = 'inherit'
+    wrapper.style.display = isBlock ? 'block' : 'inline-block'
+    wrapper.style.width = isBlock ? '100%' : 'auto'
+    wrapper.style.color = 'inherit'
+    wrapper.classList.add('dictate-button-wrapper')
 
-    parent.insertBefore(container, textField)
-    container.appendChild(textField)
+    parent.insertBefore(wrapper, textField)
+    wrapper.appendChild(textField)
 
     // Mirror margins to wrapper to keep external spacing the same.
-    container.style.margin = csField.margin
+    wrapper.style.margin = csField.margin
     textField.style.margin = '0'
 
     // Ensure text field fills the container.
@@ -86,7 +87,7 @@ export function injectDictateButton(
     dictateBtn.style.right = '0'
     dictateBtn.style.top =
       calculateButtonPositionTop(
-        container,
+        wrapper,
         textField,
         buttonSize,
         buttonMargin
@@ -96,8 +97,8 @@ export function injectDictateButton(
       dictateBtn.apiEndpoint = customApiEndpoint
     }
 
-    // Set the document language or navigator language as the dictate-button component's language if set.
-    const lang = document.documentElement.lang || navigator.language || ''
+    // Set the document language as the dictate-button component's language if set.
+    const lang = document.documentElement.lang
     if (lang && lang.length >= 2) {
       // We need to convert the larger language code "en-US" to "en" for the dictate-button API,
       // which only accepts "en" as the language code.
@@ -130,7 +131,7 @@ export function injectDictateButton(
       focusOnTextField(textField)
     })
 
-    container.appendChild(dictateBtn)
+    wrapper.appendChild(dictateBtn)
   }
 }
 

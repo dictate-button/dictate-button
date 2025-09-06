@@ -38,7 +38,7 @@ Choose the auto-inject mode that best suits your needs:
 Both auto-inject modes:
 - Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded).
 - Watch for DOM changes to apply the dictate button to newly added elements.
-- Set the button’s language from `document.documentElement.lang` (if present) or fall back to `navigator.language`.
+- Set the button’s language from `document.documentElement.lang` (if present).
 
 ### From CDN
 
