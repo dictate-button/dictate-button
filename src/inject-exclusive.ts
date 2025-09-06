@@ -1,7 +1,6 @@
 import { injectDictateButtonOnLoad } from './libs/injectDictateButtonOnLoad'
 
 const BUTTON_SIZE = 30 // px
-const BUTTON_MARGIN = 10 // px
 const WATCH_DOM_CHANGES = true
 const VERBOSE = false
 const TEXT_FIELD_SELECTOR = [
@@ -13,7 +12,6 @@ const TEXT_FIELD_SELECTOR = [
 
 injectDictateButtonOnLoad(TEXT_FIELD_SELECTOR, {
   buttonSize: BUTTON_SIZE,
-  buttonMargin: BUTTON_MARGIN,
   watchDomChanges: WATCH_DOM_CHANGES,
   verbose: VERBOSE,
 })
