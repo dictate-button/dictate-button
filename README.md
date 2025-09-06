@@ -122,9 +122,9 @@ import { injectDictateButton, injectDictateButtonOnLoad } from 'dictate-button/l
 injectDictateButton(
   'textarea.custom-selector', // CSS selector for target elements
   {
-    buttonSize: 30,           // Button size in pixels
-    buttonMargin: 10,         // Button margin in pixels
-    verbose: false,           // Log events to console (optional, default: false)
+    buttonSize: 30,           // Button size in pixels (optional; default: 30)
+    buttonMargin: 10,         // Button margin in pixels (optional; default: 10)
+    verbose: false,           // Log events to console (optional; default: false)
     customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
   }
 )
@@ -133,18 +133,17 @@ injectDictateButton(
 injectDictateButtonOnLoad(
   'input.custom-selector',    // CSS selector for target elements
   {
-    buttonSize: 30,           // Button size in pixels
-    buttonMargin: 10,         // Button margin in pixels
-    watchDomChanges: true,    // Watch for DOM changes (optional, default: false)
-    verbose: false,           // Log events to console (optional, default: false)
+    buttonSize: 30,           // Button size in pixels (optional; default: 30)
+    buttonMargin: 10,         // Button margin in pixels (optional; default: 10)
+    watchDomChanges: true,    // Watch for DOM changes (optional; default: false)
+    verbose: false,           // Log events to console (optional; default: false)
     customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
   }
 )
 ```
 
-You can also specify a custom API endpoint by adding `customApiEndpoint` to the options object.
-
-Note: verbose controls console logging from the button event listeners.
+Note: the injector mirrors the target field’s display/margins into a wrapper, 
+sets wrapper width to 100% for block-level fields, and adds padding to avoid the button overlapping text.
 
 ## Events
 
