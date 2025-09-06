@@ -1,13 +1,13 @@
 import type { DictateButtonProps } from '../dictate-button'
 
+const DEFAULT_BUTTON_MARGIN = 10 // in px; in case if can't calculate it based on the textfield padding.
+
 /**
  * Options for the dictate button injection.
  */
 export interface InjectDictateButtonOptions {
   /** Size of the button in pixels; defaults to 30 */
   buttonSize?: number
-  /** Margin around the button in pixels; defaults to 10 */
-  buttonMargin?: number
   /** Whether to log events to console */
   verbose?: boolean
   /** Optional custom API endpoint */
@@ -28,7 +28,6 @@ export function injectDictateButton(
 ) {
   const {
     buttonSize = 30,
-    buttonMargin = 10,
     verbose = false,
     customApiEndpoint,
   } = options
@@ -75,9 +74,10 @@ export function injectDictateButton(
     textField.style.boxSizing = 'border-box'
 
     // Prevent text from being obscured by the button.
-    const existingRightPadding = parseFloat(csField.paddingRight || '0')
-    const fullButtonSize = buttonSize + buttonMargin * 1
-    textField.style.paddingRight = `${existingRightPadding + fullButtonSize}px`
+    const oldTextfieldRightPadding = parseFloat(
+      csField.paddingRight || `${DEFAULT_BUTTON_MARGIN}px`
+    )
+    textField.style.paddingRight = `${buttonSize + oldTextfieldRightPadding * 2}px`
 
     // Add the dictate-button component.
     const dictateBtn = document.createElement('dictate-button') as HTMLElement &
@@ -85,14 +85,17 @@ export function injectDictateButton(
     dictateBtn.size = buttonSize
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
-    dictateBtn.style.top =
-      calculateButtonPositionTop(
-        wrapper,
-        textField,
-        buttonSize,
-        buttonMargin
-      ) + 'px'
-    dictateBtn.style.margin = buttonMargin + 'px'
+
+    dictateBtn.style.top = calculateButtonPositionTop(
+      wrapper,
+      textField,
+      buttonSize
+    )
+    dictateBtn.style.marginRight =
+      dictateBtn.style.marginLeft = `${oldTextfieldRightPadding}px`
+    dictateBtn.style.marginTop = '0'
+    dictateBtn.style.marginBottom = '0'
+
     if (customApiEndpoint) {
       dictateBtn.apiEndpoint = customApiEndpoint
     }
@@ -138,17 +141,15 @@ export function injectDictateButton(
 function calculateButtonPositionTop(
   container: HTMLDivElement,
   textField: HTMLInputElement | HTMLTextAreaElement,
-  buttonSize: number,
-  buttonMargin: number
-) {
+  buttonSize: number
+): string {
   if (textField.tagName.toLowerCase() === 'textarea') {
-    return 0
+    const csTextfield = getComputedStyle(textField)
+    return csTextfield.paddingTop || `${DEFAULT_BUTTON_MARGIN}px`
   }
 
-  const calculatedTop = Math.round(
-    container.clientHeight / 2 - buttonSize / 2 - buttonMargin
-  )
-  return Math.max(0, calculatedTop)
+  const calculatedTop = Math.round(container.clientHeight / 2 - buttonSize / 2)
+  return `${Math.max(0, calculatedTop)}px`
 }
 
 function receiveText(
