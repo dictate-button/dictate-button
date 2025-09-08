@@ -1,6 +1,11 @@
 import type { DictateButtonProps } from '../dictate-button'
 
-const DEFAULT_BUTTON_MARGIN = 10 // in px; in case if can't calculate it based on the textfield padding.
+/**
+ * This is a fallback for automatic calculation of the button position inside the container.
+ * It is used when we cannot reliably calculate the button position based on the original text field padding.
+ * We need it to ensure that the recording animation has enough space to be visible.
+ */
+const MIN_BUTTON_MARGIN = 4 // px
 
 /**
  * Options for the dictate button injection.
@@ -70,10 +75,10 @@ export function injectDictateButton(
     textField.style.boxSizing = 'border-box'
 
     // Prevent text from being obscured by the button.
-    const oldTextfieldRightPadding = parseFloat(
-      csField.paddingRight || `${DEFAULT_BUTTON_MARGIN}px`
-    )
-    textField.style.paddingRight = `${buttonSize + oldTextfieldRightPadding * 2}px`
+    const marginX =
+      parseFloat(csField.paddingRight || '0') || MIN_BUTTON_MARGIN
+
+    textField.style.paddingRight = `${buttonSize + marginX * 2}px`
 
     // Add the dictate-button component.
     const dictateBtn = document.createElement('dictate-button') as HTMLElement &
@@ -87,8 +92,7 @@ export function injectDictateButton(
       textField,
       buttonSize
     )
-    dictateBtn.style.marginRight =
-      dictateBtn.style.marginLeft = `${oldTextfieldRightPadding}px`
+    dictateBtn.style.marginRight = dictateBtn.style.marginLeft = `${marginX}px`
     dictateBtn.style.marginTop = '0'
     dictateBtn.style.marginBottom = '0'
 
@@ -149,11 +153,12 @@ function calculateButtonPositionTop(
 ): string {
   if (textField.tagName.toLowerCase() === 'textarea') {
     const csTextfield = getComputedStyle(textField)
-    return csTextfield.paddingTop || `${DEFAULT_BUTTON_MARGIN}px`
+    const paddingTop = parseFloat(csTextfield.paddingTop || '0')
+    return `${paddingTop || MIN_BUTTON_MARGIN}px`
   }
 
   const calculatedTop = Math.round(container.clientHeight / 2 - buttonSize / 2)
-  return `${Math.max(0, calculatedTop)}px`
+  return `${Math.max(MIN_BUTTON_MARGIN, calculatedTop)}px`
 }
 
 function receiveText(
