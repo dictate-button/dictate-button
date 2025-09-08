@@ -39,7 +39,7 @@ Both auto-inject modes:
 - Automatically run on DOMContentLoaded (or immediately if the DOM is already loaded).
 - Watch for DOM changes to apply the dictate button to newly added elements.
 - Set the button’s language from `document.documentElement.lang` (if present). Long codes like `en-GB` are normalized to `en`.
-- Position the button to the right top corner of the text field respecting its padding with 4px fallback is the padding is not set (0).
+- Position the button to the top right-hand corner of the text field, respecting its padding with 4px fallback if the padding is not set (0).
 
 ### From CDN
 
