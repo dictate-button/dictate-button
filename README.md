@@ -137,9 +137,9 @@ injectDictateButtonOnLoad(
   'input.custom-selector',    // CSS selector for target elements
   {
     buttonSize: 30,           // Button size in pixels (optional; default: 30)
-    watchDomChanges: true,    // Watch for DOM changes (optional; default: false)
     verbose: false,           // Log events to console (optional; default: false)
-    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
+    customApiEndpoint: 'https://api.example.com/transcribe', // Optional custom API endpoint
+    watchDomChanges: true     // Watch for DOM changes (optional; default: false)
   }
 )
 ```
