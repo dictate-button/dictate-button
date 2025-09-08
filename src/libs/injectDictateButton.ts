@@ -75,9 +75,7 @@ export function injectDictateButton(
     textField.style.boxSizing = 'border-box'
 
     // Prevent text from being obscured by the button.
-    const marginX =
-      parseFloat(csField.paddingRight || '0') || MIN_BUTTON_MARGIN
-
+    const marginX = calculateButtonMarginX(csField)
     textField.style.paddingRight = `${buttonSize + marginX * 2}px`
 
     // Add the dictate-button component.
@@ -87,11 +85,13 @@ export function injectDictateButton(
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
 
-    dictateBtn.style.top = calculateButtonPositionTop(
-      wrapper,
-      textField,
-      buttonSize
-    )
+    dictateBtn.style.top =
+      calculateButtonPositionTop(
+        wrapper,
+        csField,
+        textField.tagName,
+        buttonSize
+      ) + 'px'
     dictateBtn.style.marginRight = dictateBtn.style.marginLeft = `${marginX}px`
     dictateBtn.style.marginTop = '0'
     dictateBtn.style.marginBottom = '0'
@@ -148,17 +148,23 @@ function getDocumentLanguage(): string | undefined {
 
 function calculateButtonPositionTop(
   container: HTMLDivElement,
-  textField: HTMLInputElement | HTMLTextAreaElement,
+  textFieldComputedStyle: CSSStyleDeclaration,
+  textFieldTagName: string,
   buttonSize: number
-): string {
-  if (textField.tagName.toLowerCase() === 'textarea') {
-    const csTextfield = getComputedStyle(textField)
-    const paddingTop = parseFloat(csTextfield.paddingTop || '0')
-    return `${paddingTop || MIN_BUTTON_MARGIN}px`
+): number {
+  if (textFieldTagName.toLowerCase() === 'textarea') {
+    const paddingTop = parseFloat(textFieldComputedStyle.paddingTop || '0')
+    return Math.max(MIN_BUTTON_MARGIN, paddingTop)
   }
 
   const calculatedTop = Math.round(container.clientHeight / 2 - buttonSize / 2)
-  return `${Math.max(MIN_BUTTON_MARGIN, calculatedTop)}px`
+  return Math.max(MIN_BUTTON_MARGIN, calculatedTop)
+}
+function calculateButtonMarginX(
+  textFieldComputedStyle: CSSStyleDeclaration
+): number {
+  const paddingRight = parseFloat(textFieldComputedStyle.paddingRight || '0')
+  return Math.max(paddingRight, MIN_BUTTON_MARGIN)
 }
 
 function receiveText(
