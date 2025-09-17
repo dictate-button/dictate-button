@@ -6,6 +6,18 @@ export const dictateButtonStyles = `
   color-scheme: only light;
 }
 
+:host .dictate-button__status-announcer {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 :host .dictate-button__button {
   cursor: pointer;
   padding: 8px;
@@ -22,12 +34,10 @@ export const dictateButtonStyles = `
 :host .dictate-button__button:hover {
   background-color: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.7));
 }
-
 :host .dictate-button__button:focus {
   background-color: light-dark(rgba(0, 0, 0, 0.15), rgba(255, 255, 255, 0.7));
   outline: none;
 }
-
 :host .dictate-button__button:focus-visible {
   outline: 2px solid light-dark(rgba(0, 0, 0, 0.8), rgba(255, 255, 255, 0.8));
   outline-offset: 2px;
@@ -37,7 +47,6 @@ export const dictateButtonStyles = `
   width: 100%;
   height: 100%;
 }
-
 :host .dictate-button__button .dictate-button__icon.dictate-button__icon--processing {
   animation: dictate-button-rotate 1s linear infinite;
 }

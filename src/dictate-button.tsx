@@ -234,11 +234,7 @@ customElement(
     return (
       <div part="container" class="dictate-button__container">
         <style>{dictateButtonStyles}</style>
-        <div
-          aria-live="polite"
-          class="dictate-button__status-announcer"
-          style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"
-        >
+        <div aria-live="polite" class="dictate-button__status-announcer">
           {buttonAriaLabel(status())}
         </div>
         <button
