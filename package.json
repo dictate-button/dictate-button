@@ -49,6 +49,11 @@
       "types": "./dist/inject-inclusive.d.ts",
       "import": "./dist/inject-inclusive.js",
       "default": "./dist/inject-inclusive.js"
+    },
+    "./inject-floating": {
+      "types": "./dist/inject-floating.d.ts",
+      "import": "./dist/inject-floating.js",
+      "default": "./dist/inject-floating.js"
     }
   },
   "files": [

@@ -32,6 +32,7 @@ export default defineConfig({
           'src/libs/injectDictateButtonOnLoad.ts',
         'inject-exclusive': 'src/inject-exclusive.ts',
         'inject-inclusive': 'src/inject-inclusive.ts',
+        'inject-floating': 'src/inject-floating.ts',
       },
       formats: ['es'],
     },
