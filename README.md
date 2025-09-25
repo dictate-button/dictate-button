@@ -1,7 +1,7 @@
 # Dictate Button (Web Component)
 ![NPM Version](https://img.shields.io/npm/v/dictate-button)
 
-A customizable web component that adds speech-to-text dictation capabilities to any text input or textarea field on your website.
+A customizable web component that adds speech-to-text dictation capabilities to any text input, textarea field, or contenteditable element on your website.
 
 Developed for [dictate-button.io](https://dictate-button.io).
 
@@ -9,7 +9,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 
 - Easy integration with any website
 - Compatible with any framework (or no framework)
-- Automatic injection into any textarea or text input with the `data-dictate-button-on` attribute (exclusive mode) or without the `data-dictate-button-off` attribute (inclusive mode)
+- Automatic injection into text fields with the `data-dictate-button-on` attribute (exclusive mode) or without the `data-dictate-button-off` attribute (inclusive mode)
 - Simple speech-to-text functionality with clean UI
 - Customizable size and API endpoint
 - Dark and light theme support
@@ -23,6 +23,7 @@ Developed for [dictate-button.io](https://dictate-button.io).
 - input[type="text"]
 - input[type="search"]
 - input (without a type; defaults to text)
+- [contenteditable] elements
 
 ## Usage
 
@@ -52,13 +53,14 @@ In your HTML `<head>` tag, add the following script tags:
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.js"></script>
 ```
 
-Add the `data-dictate-button-on` attribute to any `textarea`, `input[type="text"]`, `input[type="search"]`, or `input` without a `type` attribute:
+Add the `data-dictate-button-on` attribute to any `textarea`, `input[type="text"]`, `input[type="search"]`, `input` without a `type` attribute, or element with the `contenteditable` attribute:
 
 ```html
 <textarea data-dictate-button-on></textarea>
 <input type="text" data-dictate-button-on />
 <input type="search" data-dictate-button-on />
 <input data-dictate-button-on />
+<div contenteditable data-dictate-button-on />
 ```
 
 #### Option 2: Using the inclusive auto-inject script
@@ -70,7 +72,7 @@ In your HTML `<head>` tag, add the following script tags:
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.js"></script>
 ```
 
-All `textarea`, `input[type="text"]`, `input[type="search"]`, and `input` elements without a `type` attribute that lack `data-dictate-button-off` will be automatically enhanced by default.
+All `textarea`, `input[type="text"]`, `input[type="search"]`, `input` elements without a `type` attribute, and elements with the `contenteditable` attribute that lack `data-dictate-button-off` will be automatically enhanced by default.
 
 To disable that for a specific field, add the `data-dictate-button-off` attribute to it this way:
 
@@ -79,6 +81,7 @@ To disable that for a specific field, add the `data-dictate-button-off` attribut
 <input type="text" data-dictate-button-off />
 <input type="search" data-dictate-button-off />
 <input data-dictate-button-off />
+<div contenteditable data-dictate-button-off />
 ```
 
 #### Option 3: Manual integration

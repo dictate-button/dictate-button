@@ -1,6 +1,6 @@
 {
   "name": "dictate-button",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "description": "Dictate Button (Web Component)",
   "keywords": [
     "custom-element",
@@ -76,7 +76,7 @@
   "devDependencies": {
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
-    "vite": "^7.1.5",
+    "vite": "^7.1.7",
     "vite-plugin-dts": "^4.5.4",
     "vite-plugin-solid": "^2.11.8",
     "vite-plugin-static-copy": "^3.1.2"
