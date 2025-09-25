@@ -8,6 +8,7 @@ const TEXT_FIELD_SELECTOR = [
   'input[type="text"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])',
   'input[type="search"]:not([data-dictate-button-off]):not([data-dictate-button-enabled])',
   'input:not([type]):not([data-dictate-button-off]):not([data-dictate-button-enabled])',
+  '*[contenteditable]:not([data-dictate-button-off]):not([data-dictate-button-enabled])',
 ].join(',')
 
 injectDictateButtonOnLoad(TEXT_FIELD_SELECTOR, {
