@@ -180,6 +180,34 @@ function receiveText(
     return
   }
 
+  if (isContentEditable(textField)) {
+    insertIntoContentEditable(textField, textToInsert)
+  } else {
+    insertIntoTextfield(textField, textToInsert)
+  }
+
+  // Notify all listeners.
+  textField.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
+
+  focusOnTextField(textField)
+}
+
+function focusOnTextField(textField: HTMLElement) {
+  try {
+    textField.focus({ preventScroll: true })
+  } catch (_) {
+    textField.focus()
+  }
+}
+
+function isContentEditable(element: HTMLElement) {
+  return element.isContentEditable
+}
+
+function insertIntoTextfield(
+  textField: HTMLInputElement | HTMLTextAreaElement,
+  textToInsert: string
+) {
   const start = textField.selectionStart ?? 0
   const end = textField.selectionEnd ?? 0
 
@@ -220,17 +248,95 @@ function receiveText(
     // Restore scroll to avoid jumpiness in large textareas.
     textField.scrollTop = prevScrollTop
   }
-
-  // Notify all listeners.
-  textField.dispatchEvent(new Event('input', { bubbles: true, composed: true }))
-
-  focusOnTextField(textField)
 }
 
-function focusOnTextField(textField: HTMLInputElement | HTMLTextAreaElement) {
-  try {
-    textField.focus({ preventScroll: true })
-  } catch (_) {
-    textField.focus()
+function insertIntoContentEditable(element: HTMLElement, text: string) {
+  const selection = window.getSelection()
+
+  // Check if selection exists, is in range, and if the selection is within our contentEditable element
+  const selectionInElement =
+    selection &&
+    selection.rangeCount > 0 &&
+    element.contains(selection.getRangeAt(0).commonAncestorContainer)
+
+  if (!selectionInElement) {
+    // No valid selection within our element, append to end
+    focusOnTextField(element)
+    const range = document.createRange()
+    range.selectNodeContents(element)
+    range.collapse(false) // Position at end
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
+
+  // At this point, we should have a valid selection within our element
+  const range = selection?.getRangeAt(0)
+  if (range) {
+    // Get context around insertion point to determine if we need to add spaces
+    const beforeRange = range.cloneRange()
+    const afterRange = range.cloneRange()
+
+    // Check for character before insertion point
+    let needsLeadingSpace = false
+    beforeRange.collapse(true)
+    try {
+      beforeRange.setStart(range.startContainer, 0)
+      const textBefore = beforeRange.toString()
+      const prevChar =
+        textBefore.length > 0 ? textBefore.charAt(textBefore.length - 1) : ''
+      needsLeadingSpace = prevChar !== '' && !/\s/.test(prevChar)
+    } catch (err) {
+      console.debug(
+        'insertIntoContentEditable: Error checking text before cursor:',
+        err
+      )
+    }
+
+    // Check for character after insertion point
+    let needsTrailingSpace = false
+    afterRange.collapse(false)
+    try {
+      // Only try to get the next character if we can safely do so
+      if (afterRange.endContainer.nodeType === Node.TEXT_NODE) {
+        // For text nodes, we can safely get all text
+        const textNode = afterRange.endContainer as Text
+        afterRange.setEnd(textNode, textNode.length)
+      } else if (afterRange.endContainer.nodeType === Node.ELEMENT_NODE) {
+        // For element nodes, we need to be careful about child nodes
+        const element = afterRange.endContainer as Element
+        // Only expand if there's actually a node at the offset
+        if (element.childNodes.length > afterRange.endOffset) {
+          afterRange.setEnd(element, afterRange.endOffset + 1)
+        }
+      }
+
+      const textAfter = afterRange.toString()
+      const nextChar = textAfter.length > 0 ? textAfter.charAt(0) : ''
+      needsTrailingSpace = nextChar !== '' && !/\s/.test(nextChar)
+    } catch (err) {
+      console.debug(
+        'insertIntoContentEditable: Error checking text after cursor:',
+        err
+      )
+    }
+
+    // Add whitespace as needed
+    const formattedText =
+      (needsLeadingSpace ? ' ' : '') + text + (needsTrailingSpace ? ' ' : '')
+
+    try {
+      range.deleteContents()
+      const textNode = document.createTextNode(formattedText)
+      range.insertNode(textNode)
+      range.setStartAfter(textNode)
+      range.setEndAfter(textNode)
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+    } catch (err) {
+      console.debug('insertIntoContentEditable: Error inserting text:', err)
+      // Fallback: try to just focus and append text
+      focusOnTextField(element)
+      element.textContent = (element.textContent || '') + formattedText
+    }
   }
 }
