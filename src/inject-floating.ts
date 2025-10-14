@@ -99,8 +99,12 @@ function isTextField(element: HTMLElement): boolean {
   }
 
   // Check for contenteditable
-  const contentEditable = element.getAttribute('contenteditable')
-  return contentEditable === 'true' || contentEditable === ''
+  return isContentEditable(element)
+}
+
+function isContentEditable(element: HTMLElement): boolean {
+  console.log('isContentEditable', element.isContentEditable)
+  return element.isContentEditable
 }
 
 function createFloatingButton(options: FloatingDictateButtonOptions) {
@@ -207,7 +211,7 @@ function insertTextIntoLastFocusedField(text: unknown) {
   const element = lastFocusedField.element
 
   // Handle contenteditable elements
-  if (element.getAttribute('contenteditable')) {
+  if (isContentEditable(element)) {
     insertIntoContentEditable(element, textToInsert)
     return
   }
