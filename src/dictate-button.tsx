@@ -48,6 +48,7 @@ customElement(
     const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
 
     let mediaRecorder: MediaRecorder | null = null
+    let mediaStream: MediaStream | null = null
     let audioChunks: Blob[] = []
 
     // Audio analysis variables
@@ -112,6 +113,13 @@ customElement(
       if (mediaRecorder && mediaRecorder.state !== 'inactive') {
         mediaRecorder.stop()
       }
+
+      // Stop all media stream tracks to release the microphone.
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop())
+        mediaStream = null
+      }
+
       audioChunks = []
 
       // Clean up audio analysis
@@ -137,6 +145,9 @@ customElement(
             audio: true,
           })
 
+          // Store the stream so we can stop its tracks later.
+          mediaStream = stream
+
           // Set up audio analysis
           audioCtx = new (window.AudioContext ||
             (window as any).webkitAudioContext)()
@@ -156,7 +167,7 @@ customElement(
           }
 
           mediaRecorder.onstop = async () => {
-            // Stop audio analysis
+            // Stop audio analysis.
             running = false
 
             setStatus('processing')
