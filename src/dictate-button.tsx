@@ -1,5 +1,5 @@
 import { customElement } from 'solid-element'
-import { createSignal } from 'solid-js'
+import { createEffect, createSignal, onCleanup } from 'solid-js'
 import { dictateButtonStyles } from './dictate-button.styles'
 
 console.debug('dictate-button version:', __APP_VERSION__)
@@ -116,7 +116,7 @@ customElement(
 
       // Stop all media stream tracks to release the microphone.
       if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop())
+        mediaStream.getTracks().forEach((track) => track.stop())
         mediaStream = null
       }
 
@@ -242,6 +242,32 @@ customElement(
       setTimeout(() => setStatus('idle'), 2000)
     }
 
+    let buttonRef: HTMLButtonElement | undefined
+
+    createEffect(() => {
+      if (!buttonRef) return
+
+      const longPressEventsRelease = setupLongPress(buttonRef, {
+        onShortTap: () => {
+          console.log('Short tap')
+          toggleRecording()
+        },
+        onLongPressStart: () => {
+          console.log('Long press start')
+          toggleRecording()
+        },
+        onLongPressEnd: () => {
+          console.log('Long press end')
+          toggleRecording()
+        },
+        //  onShortTap: toggleRecording,
+        //   onLongPressStart: toggleRecording,
+        //   onLongPressEnd: toggleRecording,
+      })
+
+      onCleanup(longPressEventsRelease)
+    })
+
     return (
       <div part="container" class="dictate-button__container">
         <style>{dictateButtonStyles}</style>
@@ -253,10 +279,11 @@ customElement(
           {buttonAriaLabel(status())}
         </div>
         <button
+          ref={buttonRef}
           part="button"
           style={`width:${props.size}px;height:${props.size}px"`}
           class="dictate-button__button"
-          onClick={toggleRecording}
+          // onClick={toggleRecording}
           title={buttonTitle(status())}
           aria-label={buttonAriaLabel(status())}
           aria-pressed={status() === 'recording'}
@@ -385,3 +412,83 @@ const ErrorIcon = () => (
     <line x1="12" x2="12.01" y1="20" y2="20" />
   </svg>
 )
+
+type LongPressOptions = {
+  threshold?: number
+  preventScroll?: boolean
+  onShortTap?: (e: PointerEvent) => void
+  onLongPressStart?: (e: PointerEvent) => void
+  onLongPressEnd?: (e: PointerEvent) => void
+}
+
+export function setupLongPress(
+  element: HTMLElement,
+  {
+    threshold = 500,
+    preventScroll = true,
+    onShortTap,
+    onLongPressStart,
+    onLongPressEnd,
+  }: LongPressOptions = {}
+) {
+  let pressTimer: number | undefined
+  let longPressTriggered = false
+
+  const onContextMenu = (e: Event) => e.preventDefault()
+
+  const onPointerDown = (e: PointerEvent) => {
+    longPressTriggered = false
+    e.preventDefault()
+
+    // capture the pointer → ensures we get pointerup even if pointer leaves element
+    element.setPointerCapture(e.pointerId)
+
+    pressTimer = window.setTimeout(() => {
+      longPressTriggered = true
+      onLongPressStart?.(e)
+      element.dispatchEvent(new CustomEvent('longpress', { detail: e }))
+    }, threshold)
+  }
+
+  const onPointerUp = (e: PointerEvent) => {
+    if (pressTimer) clearTimeout(pressTimer)
+
+    // release capture
+    element.releasePointerCapture(e.pointerId)
+
+    if (longPressTriggered) {
+      onLongPressEnd?.(e)
+      element.dispatchEvent(new CustomEvent('longpressend', { detail: e }))
+    } else {
+      onShortTap?.(e)
+      element.dispatchEvent(new CustomEvent('shorttap', { detail: e }))
+    }
+  }
+
+  const onPointerCancel = (e: PointerEvent) => {
+    if (pressTimer) clearTimeout(pressTimer)
+  }
+
+  const onClick = (e: MouseEvent) => {
+    if (longPressTriggered) e.stopImmediatePropagation()
+  }
+
+  // Attach listeners
+  if (preventScroll) {
+    element.style.touchAction = 'none'
+    element.addEventListener('contextmenu', onContextMenu)
+  }
+  element.addEventListener('pointerdown', onPointerDown)
+  element.addEventListener('pointerup', onPointerUp)
+  element.addEventListener('pointercancel', onPointerCancel)
+  element.addEventListener('click', onClick)
+
+  // Return cleanup function
+  return () => {
+    if (preventScroll) element.removeEventListener('contextmenu', onContextMenu)
+    element.removeEventListener('pointerdown', onPointerDown)
+    element.removeEventListener('pointerup', onPointerUp)
+    element.removeEventListener('pointercancel', onPointerCancel)
+    element.removeEventListener('click', onClick)
+  }
+}
