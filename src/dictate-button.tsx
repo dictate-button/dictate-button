@@ -149,7 +149,7 @@ customElement(
         // If enabled, give audio feedback.
         if (props.audioFeedback) playBeep()
       } catch (error) {
-        console.warn('Failed to play beep:', error)
+        console.warn('Failed to play starting sound:', error)
       }
 
       try {
