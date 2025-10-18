@@ -8,6 +8,7 @@ export interface DictateButtonProps {
   size?: number
   apiEndpoint?: string
   language?: string
+  audioFeedback?: boolean
   // The props below are for types only. We don't use them inside the component.
   theme?: 'light' | 'dark'
   class?: string
@@ -41,6 +42,7 @@ customElement(
     size: 30,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
     language: undefined,
+    audioFeedback: true,
   },
   (props: DictateButtonProps, { element }) => {
     console.debug('api', props.apiEndpoint)
@@ -142,6 +144,13 @@ customElement(
       if (status() !== 'idle') return
 
       recordingMode = mode
+
+      try {
+        // If enabled, give audio feedback.
+        if (props.audioFeedback) playBeep()
+      } catch (error) {
+        console.warn('Failed to play starting sound:', error)
+      }
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -428,7 +437,7 @@ type AddButtonEventListenersOptions = {
   onLongPressEnd?: (e: PointerEvent) => void
 }
 
-export function addButtonEventListeners(
+function addButtonEventListeners(
   element: HTMLButtonElement,
   {
     threshold = 500,
@@ -502,5 +511,34 @@ export function addButtonEventListeners(
     element.removeEventListener('pointerup', onPointerUp)
     element.removeEventListener('pointercancel', onPointerCancel)
     element.removeEventListener('click', onClick)
+  }
+}
+
+function playBeep() {
+  const audioCtx = new (window.AudioContext ||
+    (window as any).webkitAudioContext)()
+  const oscillator = audioCtx.createOscillator()
+  const gainNode = audioCtx.createGain()
+
+  oscillator.type = 'sine'
+  oscillator.frequency.setValueAtTime(550, audioCtx.currentTime) // Gentle pitch
+
+  // Very soft volume with smooth envelope
+  const now = audioCtx.currentTime
+  gainNode.gain.setValueAtTime(0, now)
+  gainNode.gain.linearRampToValueAtTime(0.035, now + 0.03) // fade in over 30ms
+  gainNode.gain.linearRampToValueAtTime(0, now + 0.25) // fade out by 250ms
+
+  oscillator.connect(gainNode)
+  gainNode.connect(audioCtx.destination)
+
+  oscillator.start(now)
+  oscillator.stop(now + 0.3) // Total ~300ms
+
+  // Cleanup after sound ends
+  oscillator.onended = () => {
+    if (audioCtx && audioCtx.state !== 'closed') {
+      audioCtx.close()
+    }
   }
 }
