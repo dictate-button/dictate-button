@@ -247,7 +247,7 @@ customElement(
     createEffect(() => {
       if (!buttonRef) return
 
-      const longPressEventsRelease = setupLongPress(buttonRef, {
+      const removeButtonEventListeners = addButtonEventListeners(buttonRef, {
         onShortTap: () => {
           // Only allow short tap to stop if recording was started with short tap
           if (status() === 'idle') {
@@ -273,7 +273,7 @@ customElement(
         },
       })
 
-      onCleanup(longPressEventsRelease)
+      onCleanup(removeButtonEventListeners)
     })
 
     return (
@@ -428,8 +428,8 @@ type LongPressOptions = {
   onLongPressEnd?: (e: PointerEvent) => void
 }
 
-export function setupLongPress(
-  element: HTMLElement,
+export function addButtonEventListeners(
+  element: HTMLButtonElement,
   {
     threshold = 500,
     preventScroll = true,
