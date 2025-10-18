@@ -1,5 +1,5 @@
 import { customElement } from 'solid-element'
-import { createSignal } from 'solid-js'
+import { createEffect, createSignal, onCleanup } from 'solid-js'
 import { dictateButtonStyles } from './dictate-button.styles'
 
 console.debug('dictate-button version:', __APP_VERSION__)
@@ -50,6 +50,7 @@ customElement(
     let mediaRecorder: MediaRecorder | null = null
     let mediaStream: MediaStream | null = null
     let audioChunks: Blob[] = []
+    let recordingMode: 'short-tap' | 'long-press' | null = null
 
     // Audio analysis variables
     let audioCtx: AudioContext | null = null
@@ -116,11 +117,12 @@ customElement(
 
       // Stop all media stream tracks to release the microphone.
       if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop())
+        mediaStream.getTracks().forEach((track) => track.stop())
         mediaStream = null
       }
 
       audioChunks = []
+      recordingMode = null
 
       // Clean up audio analysis
       running = false
@@ -136,111 +138,143 @@ customElement(
 
     element.addEventListener('disconnected', cleanup)
 
-    const toggleRecording = async () => {
-      cleanup()
+    const startRecording = async (mode: 'short-tap' | 'long-press') => {
+      if (status() !== 'idle') return
 
-      if (status() === 'idle') {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-          })
+      recordingMode = mode
 
-          // Store the stream so we can stop its tracks later.
-          mediaStream = stream
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
 
-          // Set up audio analysis
-          audioCtx = new (window.AudioContext ||
-            (window as any).webkitAudioContext)()
-          const source = audioCtx.createMediaStreamSource(stream)
-          analyser = audioCtx.createAnalyser()
-          analyser.fftSize = 2048
-          source.connect(analyser)
-          dataArray = new Uint8Array(
-            analyser.fftSize
-          ) as Uint8Array<ArrayBuffer>
+        // Store the stream so we can stop its tracks later.
+        mediaStream = stream
 
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-          audioChunks = []
+        // Set up audio analysis
+        audioCtx = new (window.AudioContext ||
+          (window as any).webkitAudioContext)()
+        const source = audioCtx.createMediaStreamSource(stream)
+        analyser = audioCtx.createAnalyser()
+        analyser.fftSize = 2048
+        source.connect(analyser)
+        dataArray = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>
 
-          mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data)
-          }
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+        audioChunks = []
 
-          mediaRecorder.onstop = async () => {
-            // Stop audio analysis.
-            running = false
-
-            setStatus('processing')
-
-            event(element, 'transcribing:started', 'Started transcribing')
-
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
-
-            try {
-              const formData = new FormData()
-              formData.append('audio', audioBlob, 'recording.webm')
-              formData.append('origin', window?.location?.origin)
-
-              if (props.language) {
-                formData.append('language', props.language)
-              }
-
-              const response = await fetch(props.apiEndpoint!, {
-                method: 'POST',
-                body: formData,
-              })
-
-              if (!response.ok) throw new Error('Failed to transcribe audio')
-
-              const data = await response.json()
-
-              // If user cancelled processing, don't emit transcribing:finished event.
-              if (status() !== 'processing') return
-
-              event(element, 'transcribing:finished', data.text)
-
-              setStatus('idle')
-            } catch (error) {
-              console.error('Failed to transcribe audio:', error)
-
-              event(
-                element,
-                'transcribing:failed',
-                'Failed to transcribe audio'
-              )
-
-              setErrorStatus()
-            }
-          }
-
-          mediaRecorder.start()
-
-          event(element, 'recording:started', 'Started recording')
-
-          // Start audio analysis
-          running = true
-          rerenderRecordingIndication()
-
-          setStatus('recording')
-        } catch (error) {
-          console.error('Failed to start recording:', error)
-
-          event(element, 'recording:failed', 'Failed to start recording')
-
-          setErrorStatus()
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data)
         }
-      } else {
-        event(element, 'recording:stopped', 'Stopped recording')
 
-        setStatus('idle')
-        cleanup()
+        mediaRecorder.onstop = async () => {
+          // Stop audio analysis.
+          running = false
+
+          setStatus('processing')
+
+          event(element, 'transcribing:started', 'Started transcribing')
+
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+
+          try {
+            const formData = new FormData()
+            formData.append('audio', audioBlob, 'recording.webm')
+            formData.append('origin', window?.location?.origin)
+
+            if (props.language) {
+              formData.append('language', props.language)
+            }
+
+            const response = await fetch(props.apiEndpoint!, {
+              method: 'POST',
+              body: formData,
+            })
+
+            if (!response.ok) throw new Error('Failed to transcribe audio')
+
+            const data = await response.json()
+
+            // If user cancelled processing, don't emit transcribing:finished event.
+            if (status() !== 'processing') return
+
+            event(element, 'transcribing:finished', data.text)
+
+            setStatus('idle')
+          } catch (error) {
+            console.error('Failed to transcribe audio:', error)
+
+            event(element, 'transcribing:failed', 'Failed to transcribe audio')
+
+            setErrorStatus()
+          }
+        }
+
+        mediaRecorder.start()
+
+        event(element, 'recording:started', 'Started recording')
+
+        // Start audio analysis
+        running = true
+        rerenderRecordingIndication()
+
+        setStatus('recording')
+      } catch (error) {
+        console.error('Failed to start recording:', error)
+
+        event(element, 'recording:failed', 'Failed to start recording')
+
+        setErrorStatus()
       }
+    }
+
+    const stopRecording = () => {
+      if (status() !== 'recording') return
+
+      event(element, 'recording:stopped', 'Stopped recording')
+
+      setStatus('idle')
+      cleanup()
     }
 
     const setErrorStatus = () => {
       setStatus('error')
       setTimeout(() => setStatus('idle'), 2000)
     }
+
+    let buttonRef: HTMLButtonElement | undefined
+
+    createEffect(() => {
+      if (!buttonRef) return
+
+      const removeButtonEventListeners = addButtonEventListeners(buttonRef, {
+        onShortTap: () => {
+          // Only allow short tap to stop if recording was started with short tap
+          if (status() === 'idle') {
+            startRecording('short-tap')
+          } else if (
+            status() === 'recording' &&
+            recordingMode === 'short-tap'
+          ) {
+            stopRecording()
+          }
+        },
+        onLongPressStart: () => {
+          // Only start recording if idle
+          if (status() === 'idle') {
+            startRecording('long-press')
+          }
+        },
+        onLongPressEnd: () => {
+          // Only stop if recording was started with long press
+          if (status() === 'recording' && recordingMode === 'long-press') {
+            stopRecording()
+          }
+        },
+      })
+
+      onCleanup(removeButtonEventListeners)
+    })
 
     return (
       <div part="container" class="dictate-button__container">
@@ -253,10 +287,10 @@ customElement(
           {buttonAriaLabel(status())}
         </div>
         <button
+          ref={buttonRef}
           part="button"
           style={`width:${props.size}px;height:${props.size}px"`}
           class="dictate-button__button"
-          onClick={toggleRecording}
           title={buttonTitle(status())}
           aria-label={buttonAriaLabel(status())}
           aria-pressed={status() === 'recording'}
@@ -385,3 +419,88 @@ const ErrorIcon = () => (
     <line x1="12" x2="12.01" y1="20" y2="20" />
   </svg>
 )
+
+type AddButtonEventListenersOptions = {
+  threshold?: number
+  preventScroll?: boolean
+  onShortTap?: (e: PointerEvent) => void
+  onLongPressStart?: (e: PointerEvent) => void
+  onLongPressEnd?: (e: PointerEvent) => void
+}
+
+export function addButtonEventListeners(
+  element: HTMLButtonElement,
+  {
+    threshold = 500,
+    preventScroll = true,
+    onShortTap,
+    onLongPressStart,
+    onLongPressEnd,
+  }: AddButtonEventListenersOptions = {}
+) {
+  let pressTimer: number | undefined
+  let longPressTriggered = false
+
+  const onContextMenu = (e: Event) => e.preventDefault()
+
+  const onPointerDown = (e: PointerEvent) => {
+    if (pressTimer) clearTimeout(pressTimer)
+    longPressTriggered = false
+    e.preventDefault()
+
+    // capture the pointer → ensures we get pointerup even if pointer leaves element
+    element.setPointerCapture(e.pointerId)
+
+    pressTimer = window.setTimeout(() => {
+      longPressTriggered = true
+      onLongPressStart?.(e)
+      element.dispatchEvent(new CustomEvent('longpress', { detail: e }))
+    }, threshold)
+  }
+
+  const onPointerUp = (e: PointerEvent) => {
+    if (pressTimer) clearTimeout(pressTimer)
+
+    // release capture
+    element.releasePointerCapture(e.pointerId)
+
+    if (longPressTriggered) {
+      onLongPressEnd?.(e)
+      element.dispatchEvent(new CustomEvent('longpressend', { detail: e }))
+    } else {
+      onShortTap?.(e)
+      element.dispatchEvent(new CustomEvent('shorttap', { detail: e }))
+    }
+  }
+
+  const onPointerCancel = (e: PointerEvent) => {
+    if (pressTimer) clearTimeout(pressTimer)
+    element.releasePointerCapture(e.pointerId)
+    longPressTriggered = false
+  }
+
+  const onClick = (e: MouseEvent) => {
+    // Prevent default click behavior since we handle everything via pointer events
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  // Attach listeners
+  if (preventScroll) {
+    element.style.touchAction = 'none'
+    element.addEventListener('contextmenu', onContextMenu)
+  }
+  element.addEventListener('pointerdown', onPointerDown)
+  element.addEventListener('pointerup', onPointerUp)
+  element.addEventListener('pointercancel', onPointerCancel)
+  element.addEventListener('click', onClick)
+
+  // Return cleanup function
+  return () => {
+    if (preventScroll) element.removeEventListener('contextmenu', onContextMenu)
+    element.removeEventListener('pointerdown', onPointerDown)
+    element.removeEventListener('pointerup', onPointerUp)
+    element.removeEventListener('pointercancel', onPointerCancel)
+    element.removeEventListener('click', onClick)
+  }
+}
