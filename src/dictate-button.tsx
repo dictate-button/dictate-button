@@ -146,13 +146,6 @@ customElement(
       recordingMode = mode
 
       try {
-        // If enabled, give audio feedback.
-        if (props.audioFeedback) playBeep()
-      } catch (error) {
-        console.warn('Failed to play starting sound:', error)
-      }
-
-      try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         })
@@ -511,31 +504,5 @@ function addButtonEventListeners(
     element.removeEventListener('pointerup', onPointerUp)
     element.removeEventListener('pointercancel', onPointerCancel)
     element.removeEventListener('click', onClick)
-  }
-}
-
-function playBeep() {
-  const audioCtx = new (window.AudioContext ||
-    (window as any).webkitAudioContext)()
-
-  const oscillator = audioCtx.createOscillator()
-  const gainNode = audioCtx.createGain()
-
-  // Configurable settings for a soft, non-intrusive beep
-  oscillator.type = 'sine'
-  oscillator.frequency.setValueAtTime(550, audioCtx.currentTime) // Gentle pitch (Hz)
-  gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
-
-  oscillator.connect(gainNode)
-  gainNode.connect(audioCtx.destination)
-
-  oscillator.start(audioCtx.currentTime)
-  oscillator.stop(audioCtx.currentTime + 0.25) // ~250ms duration
-
-  // Cleanup after sound ends
-  oscillator.onended = () => {
-    if (audioCtx && audioCtx.state !== 'closed') {
-      audioCtx.close()
-    }
   }
 }
