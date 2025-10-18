@@ -8,7 +8,6 @@ export interface DictateButtonProps {
   size?: number
   apiEndpoint?: string
   language?: string
-  audioFeedback?: boolean
   // The props below are for types only. We don't use them inside the component.
   theme?: 'light' | 'dark'
   class?: string
@@ -42,7 +41,6 @@ customElement(
     size: 30,
     apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
     language: undefined,
-    audioFeedback: true,
   },
   (props: DictateButtonProps, { element }) => {
     console.debug('api', props.apiEndpoint)
