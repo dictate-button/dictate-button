@@ -517,23 +517,20 @@ function addButtonEventListeners(
 function playBeep() {
   const audioCtx = new (window.AudioContext ||
     (window as any).webkitAudioContext)()
+
   const oscillator = audioCtx.createOscillator()
   const gainNode = audioCtx.createGain()
 
+  // Configurable settings for a soft, non-intrusive beep
   oscillator.type = 'sine'
-  oscillator.frequency.setValueAtTime(550, audioCtx.currentTime) // Gentle pitch
-
-  // Very soft volume with smooth envelope
-  const now = audioCtx.currentTime
-  gainNode.gain.setValueAtTime(0, now)
-  gainNode.gain.linearRampToValueAtTime(0.035, now + 0.03) // fade in over 30ms
-  gainNode.gain.linearRampToValueAtTime(0, now + 0.25) // fade out by 250ms
+  oscillator.frequency.setValueAtTime(550, audioCtx.currentTime) // Gentle pitch (Hz)
+  gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
 
   oscillator.connect(gainNode)
   gainNode.connect(audioCtx.destination)
 
-  oscillator.start(now)
-  oscillator.stop(now + 0.3) // Total ~300ms
+  oscillator.start(audioCtx.currentTime)
+  oscillator.stop(audioCtx.currentTime + 0.25) // ~250ms duration
 
   // Cleanup after sound ends
   oscillator.onended = () => {
