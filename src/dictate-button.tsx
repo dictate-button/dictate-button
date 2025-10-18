@@ -420,7 +420,7 @@ const ErrorIcon = () => (
   </svg>
 )
 
-type LongPressOptions = {
+type AddButtonEventListenersOptions = {
   threshold?: number
   preventScroll?: boolean
   onShortTap?: (e: PointerEvent) => void
@@ -436,7 +436,7 @@ export function addButtonEventListeners(
     onShortTap,
     onLongPressStart,
     onLongPressEnd,
-  }: LongPressOptions = {}
+  }: AddButtonEventListenersOptions = {}
 ) {
   let pressTimer: number | undefined
   let longPressTriggered = false
