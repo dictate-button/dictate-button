@@ -162,6 +162,12 @@ The dictate-button component emits the following events:
 - `transcribing:finished`: Fired when transcribing is complete. The event detail contains the transcribed text.
 - `transcribing:failed`: Fired when an error occurs during transcribing.
 
+The ideal scenario is when user first starts recording (`recording:started`), then stops recording (`recording:stopped`), then the recorded audio is sent to the server for processing (`transcribing:started`), and finally the transcribed text is received (`transcribing:finished`).
+
+> recording:started -> recording:stopped -> transcribing:started -> transcribing:finished
+
+In case of an error in recording or transcribing, the `recording:failed` or `transcribing:failed` event is fired, respectively.
+
 Example event handling:
 
 ```javascript
