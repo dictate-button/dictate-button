@@ -52,6 +52,9 @@ customElement(
     let audioChunks: Blob[] = []
     let recordingMode: 'short-tap' | 'long-press' | null = null
 
+    // Audio feedback variables
+    let audioCtxBeep: AudioContext | null = null
+
     // Audio analysis variables
     let audioCtx: AudioContext | null = null
     let analyser: AnalyserNode | null = null
@@ -130,6 +133,12 @@ customElement(
         audioCtx.close()
       }
       audioCtx = null
+
+      if (audioCtxBeep && audioCtxBeep.state !== 'closed') {
+        audioCtxBeep.close()
+      }
+      audioCtxBeep = null
+
       analyser = null
       dataArray = null
       smoothLevel = 0
@@ -142,6 +151,15 @@ customElement(
       if (status() !== 'idle') return
 
       recordingMode = mode
+
+      try {
+        audioCtxBeep = new (window.AudioContext ||
+          (window as any).webkitAudioContext)()
+
+        playBeep(audioCtxBeep)
+      } catch (error) {
+        console.warn('Failed to play audio feedback:', error)
+      }
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -503,4 +521,18 @@ function addButtonEventListeners(
     element.removeEventListener('pointercancel', onPointerCancel)
     element.removeEventListener('click', onClick)
   }
+}
+
+function playBeep(audioCtx: AudioContext) {
+  if (audioCtx.state === 'suspended') audioCtx.resume()
+
+  const oscillator = audioCtx.createOscillator()
+  const gainNode = audioCtx.createGain()
+
+  oscillator.connect(gainNode)
+  gainNode.connect(audioCtx.destination)
+  oscillator.frequency.value = 880
+  gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime)
+  oscillator.start()
+  oscillator.stop(audioCtx.currentTime + 0.15)
 }
