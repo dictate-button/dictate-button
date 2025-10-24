@@ -1,4 +1,4 @@
-# Dictate Button (Web Component)
+# Dictate Button
 ![NPM Version](https://img.shields.io/npm/v/dictate-button)
 
 A customizable web component that adds speech-to-text dictation capabilities to any text input, textarea field, or contenteditable element on your website.

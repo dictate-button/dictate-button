@@ -1,7 +1,7 @@
 {
   "name": "dictate-button",
   "version": "1.8.0",
-  "description": "Dictate Button (Web Component)",
+  "description": "Dictate Button - a customizable Web Component that adds speech-to-text dictation capabilities to text fields",
   "keywords": [
     "custom-element",
     "dictate",
