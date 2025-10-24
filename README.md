@@ -221,7 +221,7 @@ You can specify your own endpoint by setting the `apiEndpoint` attribute.
 The API expects:
 - POST request
 - Multipart form data with the following fields:
-  - `audio`: Audio data as a Blob (audio/webm format)
+  - `audio`: Audio data as a File (audio/webm format)
   - `origin`: The origin of the website (automatically added)
   - `language`: Optional language code (if provided as an attribute)
 - Response should be JSON with a `text` property containing the transcribed text
