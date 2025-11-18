@@ -62,19 +62,27 @@
     "build": "vite build",
     "format": "prettier --write './src/**/*.{js,jsx,ts,tsx}'",
     "deploy": "firebase deploy",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "solid-element": "^1.9.1",
-    "solid-js": "^1.9.9"
+    "solid-js": "^1.9.10"
   },
   "devDependencies": {
+    "@solidjs/testing-library": "^0.8.10",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/ui": "^4.0.10",
+    "jsdom": "^27.2.0",
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
-    "vite": "^7.1.10",
+    "vite": "^7.2.2",
     "vite-plugin-dts": "^4.5.4",
-    "vite-plugin-solid": "^2.11.9",
-    "vite-plugin-static-copy": "^3.1.4"
+    "vite-plugin-solid": "^2.11.10",
+    "vite-plugin-static-copy": "^3.1.4",
+    "vitest": "^4.0.10"
   },
   "homepage": "https://github.com/dictate-button/dictate-button",
   "repository": {
