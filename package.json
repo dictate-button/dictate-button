@@ -62,7 +62,7 @@
     "build": "vite build",
     "format": "prettier --write './src/**/*.{js,jsx,ts,tsx}'",
     "deploy": "firebase deploy",
-    "prepublishOnly": "pnpm build",
+    "prepublishOnly": "pnpm build && pnpm test",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui"
