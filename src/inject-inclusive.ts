@@ -1,3 +1,4 @@
+import './dictate-button'
 import { injectDictateButtonOnLoad } from './libs/injectDictateButtonOnLoad'
 
 const BUTTON_SIZE = 30 // px

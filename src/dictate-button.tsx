@@ -35,276 +35,289 @@ const MIN_WIDTH = 0,
 const ATTACK = 0.25,
   RELEASE = 0.05
 
-customElement(
-  'dictate-button',
-  {
-    size: 30,
-    apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
-    language: undefined,
-  },
-  (props: DictateButtonProps, { element }) => {
-    console.debug('api', props.apiEndpoint)
+// Prevent duplicate registration.
+if (!customElements.get('dictate-button')) {
+  customElement(
+    'dictate-button',
+    {
+      size: 30,
+      apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
+      language: undefined,
+    },
+    (props: DictateButtonProps, { element }) => {
+      console.debug('api', props.apiEndpoint)
 
-    const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
+      const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
 
-    let mediaRecorder: MediaRecorder | null = null
-    let mediaStream: MediaStream | null = null
-    let audioChunks: Blob[] = []
-    let recordingMode: 'short-tap' | 'long-press' | null = null
+      let mediaRecorder: MediaRecorder | null = null
+      let mediaStream: MediaStream | null = null
+      let audioChunks: Blob[] = []
+      let recordingMode: 'short-tap' | 'long-press' | null = null
 
-    // Audio analysis variables
-    let audioCtx: AudioContext | null = null
-    let analyser: AnalyserNode | null = null
-    let dataArray: Uint8Array<ArrayBuffer> | null = null
-    let running = false
-    let smoothLevel = 0
+      // Audio analysis variables
+      let audioCtx: AudioContext | null = null
+      let analyser: AnalyserNode | null = null
+      let dataArray: Uint8Array<ArrayBuffer> | null = null
+      let running = false
+      let smoothLevel = 0
 
-    // Audio analysis helper functions
-    const dbToNorm = (db: number) => {
-      if (db <= MIN_DB) return 0
-      if (db >= MAX_DB) return 1
-      return (db - MIN_DB) / (MAX_DB - MIN_DB)
-    }
-
-    const rmsFromTimeDomain = (buf: Uint8Array) => {
-      let sum = 0
-      for (let i = 0; i < buf.length; i++) {
-        const v = (buf[i] - 128) / 128
-        sum += v * v
-      }
-      return Math.sqrt(sum / buf.length)
-    }
-
-    const rmsToDb = (rms: number) => {
-      const minRms = 1e-8
-      return 20 * Math.log10(Math.max(rms, minRms))
-    }
-
-    const updateShadow = (norm: number) => {
-      const button = element.shadowRoot.querySelector(
-        '.dictate-button__button'
-      ) as HTMLElement
-
-      if (!button) {
-        return
+      // Audio analysis helper functions
+      const dbToNorm = (db: number) => {
+        if (db <= MIN_DB) return 0
+        if (db >= MAX_DB) return 1
+        return (db - MIN_DB) / (MAX_DB - MIN_DB)
       }
 
-      const width = MIN_WIDTH + norm * (MAX_WIDTH - MIN_WIDTH)
-      const alpha = 0.0 + norm * 0.4
-      button.style.boxShadow = `0 0 0 ${width}px light-dark(rgba(0, 0, 0, ${alpha}), rgba(255, 255, 255, ${alpha}))`
-    }
-
-    const rerenderRecordingIndication = () => {
-      if (!running || !analyser || !dataArray) return
-
-      analyser.getByteTimeDomainData(dataArray)
-      const rms = rmsFromTimeDomain(dataArray)
-      const db = rmsToDb(rms)
-      const norm = dbToNorm(db)
-
-      const alpha = norm > smoothLevel ? ATTACK : RELEASE
-      smoothLevel = alpha * norm + (1 - alpha) * smoothLevel
-
-      updateShadow(smoothLevel)
-
-      requestAnimationFrame(rerenderRecordingIndication)
-    }
-
-    const cleanup = () => {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop()
+      const rmsFromTimeDomain = (buf: Uint8Array) => {
+        let sum = 0
+        for (let i = 0; i < buf.length; i++) {
+          const v = (buf[i] - 128) / 128
+          sum += v * v
+        }
+        return Math.sqrt(sum / buf.length)
       }
 
-      // Stop all media stream tracks to release the microphone.
-      if (mediaStream) {
-        mediaStream.getTracks().forEach((track) => track.stop())
-        mediaStream = null
+      const rmsToDb = (rms: number) => {
+        const minRms = 1e-8
+        return 20 * Math.log10(Math.max(rms, minRms))
       }
 
-      audioChunks = []
-      recordingMode = null
+      const updateShadow = (norm: number) => {
+        const button = element.shadowRoot.querySelector(
+          '.dictate-button__button'
+        ) as HTMLElement
 
-      // Clean up audio analysis
-      running = false
-      if (audioCtx && audioCtx.state !== 'closed') {
-        audioCtx.close()
+        if (!button) {
+          return
+        }
+
+        const width = MIN_WIDTH + norm * (MAX_WIDTH - MIN_WIDTH)
+        const alpha = 0.0 + norm * 0.4
+        button.style.boxShadow = `0 0 0 ${width}px light-dark(rgba(0, 0, 0, ${alpha}), rgba(255, 255, 255, ${alpha}))`
       }
-      audioCtx = null
-      analyser = null
-      dataArray = null
-      smoothLevel = 0
-      updateShadow(0)
-    }
 
-    element.addEventListener('disconnected', cleanup)
+      const rerenderRecordingIndication = () => {
+        if (!running || !analyser || !dataArray) return
 
-    const startRecording = async (mode: 'short-tap' | 'long-press') => {
-      if (status() !== 'idle') return
+        analyser.getByteTimeDomainData(dataArray)
+        const rms = rmsFromTimeDomain(dataArray)
+        const db = rmsToDb(rms)
+        const norm = dbToNorm(db)
 
-      recordingMode = mode
+        const alpha = norm > smoothLevel ? ATTACK : RELEASE
+        smoothLevel = alpha * norm + (1 - alpha) * smoothLevel
 
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
+        updateShadow(smoothLevel)
+
+        requestAnimationFrame(rerenderRecordingIndication)
+      }
+
+      const cleanup = () => {
+        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop()
+        }
+
+        // Stop all media stream tracks to release the microphone.
+        if (mediaStream) {
+          mediaStream.getTracks().forEach((track) => track.stop())
+          mediaStream = null
+        }
+
+        audioChunks = []
+        recordingMode = null
+
+        // Clean up audio analysis
+        running = false
+        if (audioCtx && audioCtx.state !== 'closed') {
+          audioCtx.close()
+        }
+        audioCtx = null
+        analyser = null
+        dataArray = null
+        smoothLevel = 0
+        updateShadow(0)
+      }
+
+      element.addEventListener('disconnected', cleanup)
+
+      const startRecording = async (mode: 'short-tap' | 'long-press') => {
+        if (status() !== 'idle') return
+
+        recordingMode = mode
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          })
+
+          // Store the stream so we can stop its tracks later.
+          mediaStream = stream
+
+          // Set up audio analysis
+          audioCtx = new (window.AudioContext ||
+            (window as any).webkitAudioContext)()
+          const source = audioCtx.createMediaStreamSource(stream)
+          analyser = audioCtx.createAnalyser()
+          analyser.fftSize = 2048
+          source.connect(analyser)
+          dataArray = new Uint8Array(
+            analyser.fftSize
+          ) as Uint8Array<ArrayBuffer>
+
+          mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+          audioChunks = []
+
+          mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data)
+          }
+
+          mediaRecorder.onstop = async () => {
+            // Stop audio analysis.
+            running = false
+
+            setStatus('processing')
+
+            event(element, 'transcribing:started', 'Started transcribing')
+
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+
+            try {
+              const formData = new FormData()
+              formData.append('audio', audioBlob, 'recording.webm')
+              formData.append('origin', window?.location?.origin)
+
+              if (props.language) {
+                formData.append('language', props.language)
+              }
+
+              const response = await fetch(props.apiEndpoint!, {
+                method: 'POST',
+                body: formData,
+              })
+
+              if (!response.ok) throw new Error('Failed to transcribe audio')
+
+              const data = await response.json()
+
+              // If user cancelled processing, don't emit transcribing:finished event.
+              if (status() !== 'processing') return
+
+              event(element, 'transcribing:finished', data.text)
+
+              setStatus('idle')
+            } catch (error) {
+              console.error('Failed to transcribe audio:', error)
+
+              event(
+                element,
+                'transcribing:failed',
+                'Failed to transcribe audio'
+              )
+
+              setErrorStatus()
+            }
+          }
+
+          mediaRecorder.start()
+
+          event(element, 'recording:started', 'Started recording')
+
+          // Start audio analysis
+          running = true
+          rerenderRecordingIndication()
+
+          setStatus('recording')
+        } catch (error) {
+          console.error('Failed to start recording:', error)
+
+          event(element, 'recording:failed', 'Failed to start recording')
+
+          setErrorStatus()
+        }
+      }
+
+      const stopRecording = () => {
+        if (status() !== 'recording') return
+
+        event(element, 'recording:stopped', 'Stopped recording')
+
+        setStatus('idle')
+        cleanup()
+      }
+
+      const setErrorStatus = () => {
+        setStatus('error')
+        setTimeout(() => setStatus('idle'), 2000)
+      }
+
+      let buttonRef: HTMLButtonElement | undefined
+
+      createEffect(() => {
+        if (!buttonRef) return
+
+        const removeButtonEventListeners = addButtonEventListeners(buttonRef, {
+          onShortTap: () => {
+            // Only allow short tap to stop if recording was started with short tap
+            if (status() === 'idle') {
+              startRecording('short-tap')
+            } else if (
+              status() === 'recording' &&
+              recordingMode === 'short-tap'
+            ) {
+              stopRecording()
+            }
+          },
+          onLongPressStart: () => {
+            // Only start recording if idle
+            if (status() === 'idle') {
+              startRecording('long-press')
+            }
+          },
+          onLongPressEnd: () => {
+            // Only stop if recording was started with long press
+            if (status() === 'recording' && recordingMode === 'long-press') {
+              stopRecording()
+            }
+          },
         })
 
-        // Store the stream so we can stop its tracks later.
-        mediaStream = stream
-
-        // Set up audio analysis
-        audioCtx = new (window.AudioContext ||
-          (window as any).webkitAudioContext)()
-        const source = audioCtx.createMediaStreamSource(stream)
-        analyser = audioCtx.createAnalyser()
-        analyser.fftSize = 2048
-        source.connect(analyser)
-        dataArray = new Uint8Array(analyser.fftSize) as Uint8Array<ArrayBuffer>
-
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-        audioChunks = []
-
-        mediaRecorder.ondataavailable = (event) => {
-          audioChunks.push(event.data)
-        }
-
-        mediaRecorder.onstop = async () => {
-          // Stop audio analysis.
-          running = false
-
-          setStatus('processing')
-
-          event(element, 'transcribing:started', 'Started transcribing')
-
-          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
-
-          try {
-            const formData = new FormData()
-            formData.append('audio', audioBlob, 'recording.webm')
-            formData.append('origin', window?.location?.origin)
-
-            if (props.language) {
-              formData.append('language', props.language)
-            }
-
-            const response = await fetch(props.apiEndpoint!, {
-              method: 'POST',
-              body: formData,
-            })
-
-            if (!response.ok) throw new Error('Failed to transcribe audio')
-
-            const data = await response.json()
-
-            // If user cancelled processing, don't emit transcribing:finished event.
-            if (status() !== 'processing') return
-
-            event(element, 'transcribing:finished', data.text)
-
-            setStatus('idle')
-          } catch (error) {
-            console.error('Failed to transcribe audio:', error)
-
-            event(element, 'transcribing:failed', 'Failed to transcribe audio')
-
-            setErrorStatus()
-          }
-        }
-
-        mediaRecorder.start()
-
-        event(element, 'recording:started', 'Started recording')
-
-        // Start audio analysis
-        running = true
-        rerenderRecordingIndication()
-
-        setStatus('recording')
-      } catch (error) {
-        console.error('Failed to start recording:', error)
-
-        event(element, 'recording:failed', 'Failed to start recording')
-
-        setErrorStatus()
-      }
-    }
-
-    const stopRecording = () => {
-      if (status() !== 'recording') return
-
-      event(element, 'recording:stopped', 'Stopped recording')
-
-      setStatus('idle')
-      cleanup()
-    }
-
-    const setErrorStatus = () => {
-      setStatus('error')
-      setTimeout(() => setStatus('idle'), 2000)
-    }
-
-    let buttonRef: HTMLButtonElement | undefined
-
-    createEffect(() => {
-      if (!buttonRef) return
-
-      const removeButtonEventListeners = addButtonEventListeners(buttonRef, {
-        onShortTap: () => {
-          // Only allow short tap to stop if recording was started with short tap
-          if (status() === 'idle') {
-            startRecording('short-tap')
-          } else if (
-            status() === 'recording' &&
-            recordingMode === 'short-tap'
-          ) {
-            stopRecording()
-          }
-        },
-        onLongPressStart: () => {
-          // Only start recording if idle
-          if (status() === 'idle') {
-            startRecording('long-press')
-          }
-        },
-        onLongPressEnd: () => {
-          // Only stop if recording was started with long press
-          if (status() === 'recording' && recordingMode === 'long-press') {
-            stopRecording()
-          }
-        },
+        onCleanup(removeButtonEventListeners)
       })
 
-      onCleanup(removeButtonEventListeners)
-    })
-
-    return (
-      <div part="container" class="dictate-button__container">
-        <style>{dictateButtonStyles}</style>
-        <div
-          aria-live="polite"
-          class="dictate-button__status-announcer"
-          style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"
-        >
-          {buttonAriaLabel(status())}
+      return (
+        <div part="container" class="dictate-button__container">
+          <style>{dictateButtonStyles}</style>
+          <div
+            aria-live="polite"
+            class="dictate-button__status-announcer"
+            style="position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0;"
+          >
+            {buttonAriaLabel(status())}
+          </div>
+          <button
+            ref={buttonRef}
+            part="button"
+            style={`width:${props.size}px;height:${props.size}px"`}
+            class="dictate-button__button"
+            title={buttonTitle(status())}
+            aria-label={buttonAriaLabel(status())}
+            aria-pressed={status() === 'recording'}
+            aria-busy={status() === 'processing'}
+          >
+            {status() === 'idle' && <IdleIcon />}
+            {status() === 'recording' && <RecordingIcon />}
+            {status() === 'processing' && <ProcessingIcon />}
+            {status() === 'error' && <ErrorIcon />}
+          </button>
         </div>
-        <button
-          ref={buttonRef}
-          part="button"
-          style={`width:${props.size}px;height:${props.size}px"`}
-          class="dictate-button__button"
-          title={buttonTitle(status())}
-          aria-label={buttonAriaLabel(status())}
-          aria-pressed={status() === 'recording'}
-          aria-busy={status() === 'processing'}
-        >
-          {status() === 'idle' && <IdleIcon />}
-          {status() === 'recording' && <RecordingIcon />}
-          {status() === 'processing' && <ProcessingIcon />}
-          {status() === 'error' && <ErrorIcon />}
-        </button>
-      </div>
-    )
-  }
-)
+      )
+    }
+  )
+} else {
+  console.debug(
+    `dictate-button: We don't require importing the dictate-button component separately anymore, so you may remove the script tag which imports https://cdn.dictate-button.io/dictate-button.js from the HTML head.`
+  )
+}
 
 const buttonTitle = (status: DictateButtonStatus) => {
   switch (status) {

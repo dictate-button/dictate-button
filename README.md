@@ -46,10 +46,9 @@ Both auto-inject modes:
 
 #### Option 1: Using the exclusive auto-inject script
 
-In your HTML `<head>` tag, add the following script tags:
+In your HTML `<head>` tag, add the following script tag:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-exclusive.js"></script>
 ```
 
@@ -65,10 +64,9 @@ Add the `data-dictate-button-on` attribute to any `textarea`, `input[type="text"
 
 #### Option 2: Using the inclusive auto-inject script
 
-In your HTML `<head>` tag, add the following script tags:
+In your HTML `<head>` tag, add the following script tag:
 
 ```html
-<script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
 <script type="module" crossorigin src="https://cdn.dictate-button.io/inject-inclusive.js"></script>
 ```
 
@@ -96,15 +94,7 @@ Import the component and use it directly in your code:
 
 ### From NPM
 
-Import once for your app.
-
-The button component:
-
-```js
-import 'dictate-button'
-```
-
-The auto-inject script:
+Import once for your app:
 
 ```js
 // For selected text fields (with data-dictate-button-on attribute):
@@ -123,6 +113,7 @@ Tip: You can also import from subpaths (e.g., 'dictate-button/libs/injectDictate
 for smaller bundles, if your bundler resolves package subpath exports.
 
 ```js
+import 'dictate-button' // Required when using library functions directly
 import { injectDictateButton, injectDictateButtonOnLoad } from 'dictate-button/libs'
 
 // Inject dictate buttons immediately to matching elements
