@@ -21,10 +21,10 @@ declare module 'solid-js' {
   }
 }
 
-type DictateButtonStatus = 'idle' | 'recording' | 'processing' | 'error'
+type DictateButtonStatus = 'idle' | 'transcribing' | 'error'
 
 const DEFAULT_TRANSCRIBE_API_ENDPOINT =
-  'https://api.dictate-button.io/transcribe'
+  'wss://api.dictate-button.io/v2/transcribe'
 const APP_NAME = 'dictate-button.io'
 
 // Audio analysis constants
@@ -49,14 +49,17 @@ if (!customElements.get('dictate-button')) {
 
       const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
 
-      let mediaRecorder: MediaRecorder | null = null
+      let ws: WebSocket | null = null
       let mediaStream: MediaStream | null = null
-      let audioChunks: Blob[] = []
       let recordingMode: 'short-tap' | 'long-press' | null = null
+      let lastTranscript = ''
+      let accumulatedTranscript = '' // Accumulate across turns
+      let currentTurnOrder = -1
 
-      // Audio analysis variables
+      // Audio processing variables
       let audioCtx: AudioContext | null = null
       let analyser: AnalyserNode | null = null
+      let workletNode: AudioWorkletNode | null = null
       let dataArray: Uint8Array<ArrayBuffer> | null = null
       let running = false
       let smoothLevel = 0
@@ -113,8 +116,16 @@ if (!customElements.get('dictate-button')) {
       }
 
       const cleanup = () => {
-        if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-          mediaRecorder.stop()
+        // Close WebSocket connection
+        if (ws) {
+          ws.close()
+          ws = null
+        }
+
+        // Disconnect worklet
+        if (workletNode) {
+          workletNode.disconnect()
+          workletNode = null
         }
 
         // Stop all media stream tracks to release the microphone.
@@ -123,10 +134,12 @@ if (!customElements.get('dictate-button')) {
           mediaStream = null
         }
 
-        audioChunks = []
         recordingMode = null
+        lastTranscript = ''
+        accumulatedTranscript = ''
+        currentTurnOrder = -1
 
-        // Clean up audio analysis
+        // Clean up audio context
         running = false
         if (audioCtx && audioCtx.state !== 'closed') {
           audioCtx.close()
@@ -140,23 +153,32 @@ if (!customElements.get('dictate-button')) {
 
       element.addEventListener('disconnected', cleanup)
 
-      const startRecording = async (mode: 'short-tap' | 'long-press') => {
+      const startTranscribing = async (mode: 'short-tap' | 'long-press') => {
         if (status() !== 'idle') return
 
         recordingMode = mode
+        lastTranscript = ''
+        accumulatedTranscript = ''
+        currentTurnOrder = -1
 
         try {
+          // Get microphone access
           const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
+            audio: {
+              sampleRate: 16000,
+              channelCount: 1,
+              echoCancellation: true,
+              noiseSuppression: true,
+            },
           })
-
-          // Store the stream so we can stop its tracks later.
           mediaStream = stream
 
-          // Set up audio analysis
+          // Set up audio context at 16kHz for AssemblyAI
           audioCtx = new (window.AudioContext ||
-            (window as any).webkitAudioContext)()
+            (window as any).webkitAudioContext)({ sampleRate: 16000 })
           const source = audioCtx.createMediaStreamSource(stream)
+
+          // Set up analyser for visual feedback
           analyser = audioCtx.createAnalyser()
           analyser.fftSize = 2048
           source.connect(analyser)
@@ -164,85 +186,148 @@ if (!customElements.get('dictate-button')) {
             analyser.fftSize
           ) as Uint8Array<ArrayBuffer>
 
-          mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' })
-          audioChunks = []
+          // Create worklet module as Blob URL (portable, works from any origin)
+          const workletCode = `
+            class PcmProcessor extends AudioWorkletProcessor {
+              process(inputs) {
+                const input = inputs[0]
+                if (input.length > 0) {
+                  const channelData = input[0]
+                  const pcm16 = new Int16Array(channelData.length)
+                  for (let i = 0; i < channelData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, channelData[i]))
+                    pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff
+                  }
+                  this.port.postMessage(pcm16.buffer, [pcm16.buffer])
+                }
+                return true
+              }
+            }
+            registerProcessor('pcm-processor', PcmProcessor)
+          `
+          const workletBlob = new Blob([workletCode], { type: 'application/javascript' })
+          const workletUrl = URL.createObjectURL(workletBlob)
 
-          mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data)
+          // Load and set up AudioWorklet for PCM capture
+          await audioCtx.audioWorklet.addModule(workletUrl)
+          URL.revokeObjectURL(workletUrl)
+          workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor')
+          source.connect(workletNode)
+
+          // Connect to WebSocket with language parameter
+          const wsUrl = new URL(props.apiEndpoint!)
+          if (props.language) {
+            wsUrl.searchParams.set('language', props.language)
+          }
+          ws = new WebSocket(wsUrl.toString())
+          console.debug('[dictate-button] Connecting with language:', props.language || 'en')
+
+          ws.onopen = () => {
+            console.debug('[dictate-button] WebSocket connected')
           }
 
-          mediaRecorder.onstop = async () => {
-            // Stop audio analysis.
-            running = false
-
-            setStatus('processing')
-
-            event(element, 'transcribing:started', 'Started transcribing')
-
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
-
+          ws.onmessage = (evt) => {
             try {
-              const formData = new FormData()
-              formData.append('audio', audioBlob, 'recording.webm')
-              formData.append('origin', window?.location?.origin)
+              const msg = JSON.parse(evt.data)
+              console.debug('[dictate-button] Received message:', msg.type)
 
-              if (props.language) {
-                formData.append('language', props.language)
+              if (msg.type === 'transcript' && msg.text) {
+                const turnOrder = msg.turn_order ?? 0
+                const currentTurnText = msg.text
+
+                console.debug('[dictate-button] Received transcript:', {
+                  turn_order: turnOrder,
+                  end_of_turn: msg.end_of_turn,
+                  text_length: currentTurnText.length,
+                  text_preview: currentTurnText.substring(0, 30)
+                })
+
+                // Check if this is a new turn
+                if (turnOrder > currentTurnOrder) {
+                  // New turn started - accumulate previous turn's text
+                  if (lastTranscript) {
+                    accumulatedTranscript = accumulatedTranscript
+                      ? accumulatedTranscript + ' ' + lastTranscript
+                      : lastTranscript
+                    console.debug('[dictate-button] New turn detected. Accumulated:', accumulatedTranscript.substring(0, 50))
+                  }
+                  currentTurnOrder = turnOrder
+                  lastTranscript = currentTurnText
+                } else {
+                  // Same turn - update current transcript
+                  lastTranscript = currentTurnText
+                }
+
+                // Send the combined text for display (accumulated + current)
+                const displayText = accumulatedTranscript
+                  ? accumulatedTranscript + ' ' + lastTranscript
+                  : lastTranscript
+                event(element, 'dictate-text', displayText)
+              } else if (msg.type === 'session_opened') {
+                console.debug('[dictate-button] Session opened:', msg.sessionId)
+              } else if (msg.type === 'session_closed') {
+                console.debug('[dictate-button] Session closed:', msg.code, msg.reason)
+              } else if (msg.type === 'error') {
+                console.error('[dictate-button] Server error:', msg.error)
+                event(element, 'dictate-error', msg.error)
+                setErrorStatus()
+                cleanup()
               }
-
-              const response = await fetch(props.apiEndpoint!, {
-                method: 'POST',
-                body: formData,
-              })
-
-              if (!response.ok) throw new Error('Failed to transcribe audio')
-
-              const data = await response.json()
-
-              // If user cancelled processing, don't emit transcribing:finished event.
-              if (status() !== 'processing') return
-
-              event(element, 'transcribing:finished', data.text)
-
-              setStatus('idle')
             } catch (error) {
-              console.error('Failed to transcribe audio:', error)
-
-              event(
-                element,
-                'transcribing:failed',
-                'Failed to transcribe audio'
-              )
-
-              setErrorStatus()
+              console.error('[dictate-button] Error parsing message:', error)
             }
           }
 
-          mediaRecorder.start()
+          ws.onerror = (err) => {
+            console.error('[dictate-button] WebSocket error:', err)
+            event(element, 'dictate-error', 'Connection error')
+            setErrorStatus()
+            cleanup()
+          }
 
-          event(element, 'recording:started', 'Started recording')
+          ws.onclose = (evt) => {
+            console.debug('[dictate-button] WebSocket closed. Code:', evt.code, 'Reason:', evt.reason)
+          }
 
-          // Start audio analysis
+          // Stream PCM data to WebSocket when available
+          workletNode.port.onmessage = (evt) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+              ws.send(evt.data)
+            }
+          }
+
+          event(element, 'dictate-start', 'Started transcribing')
+
+          // Start audio level visualization
           running = true
           rerenderRecordingIndication()
 
-          setStatus('recording')
+          setStatus('transcribing')
         } catch (error) {
-          console.error('Failed to start recording:', error)
-
-          event(element, 'recording:failed', 'Failed to start recording')
-
+          console.error('[dictate-button] Failed to start:', error)
+          event(element, 'dictate-error', 'Failed to start transcription')
           setErrorStatus()
+          cleanup()
         }
       }
 
-      const stopRecording = () => {
-        if (status() !== 'recording') return
+      const stopTranscribing = () => {
+        if (status() !== 'transcribing') return
 
-        event(element, 'recording:stopped', 'Stopped recording')
+        running = false
 
-        setStatus('idle')
+        // Emit final transcript (accumulated + last)
+        const finalTranscript = accumulatedTranscript
+          ? accumulatedTranscript + (lastTranscript ? ' ' + lastTranscript : '')
+          : lastTranscript
+
+        if (finalTranscript) {
+          console.debug('[dictate-button] Final transcript:', finalTranscript.substring(0, 100))
+          event(element, 'dictate-end', finalTranscript)
+        }
+
         cleanup()
+        setStatus('idle')
       }
 
       const setErrorStatus = () => {
@@ -257,26 +342,23 @@ if (!customElements.get('dictate-button')) {
 
         const removeButtonEventListeners = addButtonEventListeners(buttonRef, {
           onShortTap: () => {
-            // Only allow short tap to stop if recording was started with short tap
             if (status() === 'idle') {
-              startRecording('short-tap')
+              startTranscribing('short-tap')
             } else if (
-              status() === 'recording' &&
+              status() === 'transcribing' &&
               recordingMode === 'short-tap'
             ) {
-              stopRecording()
+              stopTranscribing()
             }
           },
           onLongPressStart: () => {
-            // Only start recording if idle
             if (status() === 'idle') {
-              startRecording('long-press')
+              startTranscribing('long-press')
             }
           },
           onLongPressEnd: () => {
-            // Only stop if recording was started with long press
-            if (status() === 'recording' && recordingMode === 'long-press') {
-              stopRecording()
+            if (status() === 'transcribing' && recordingMode === 'long-press') {
+              stopTranscribing()
             }
           },
         })
@@ -301,12 +383,11 @@ if (!customElements.get('dictate-button')) {
             class="dictate-button__button"
             title={buttonTitle(status())}
             aria-label={buttonAriaLabel(status())}
-            aria-pressed={status() === 'recording'}
-            aria-busy={status() === 'processing'}
+            aria-pressed={status() === 'transcribing'}
+            aria-busy={status() === 'transcribing'}
           >
             {status() === 'idle' && <IdleIcon />}
-            {status() === 'recording' && <RecordingIcon />}
-            {status() === 'processing' && <ProcessingIcon />}
+            {status() === 'transcribing' && <RecordingIcon />}
             {status() === 'error' && <ErrorIcon />}
           </button>
         </div>
@@ -323,10 +404,8 @@ const buttonTitle = (status: DictateButtonStatus) => {
   switch (status) {
     case 'idle':
       return `Start dictation (${APP_NAME})`
-    case 'recording':
+    case 'transcribing':
       return `Stop dictation (${APP_NAME})`
-    case 'processing':
-      return `Stop processing (${APP_NAME})`
     case 'error':
       return `Click to reset (${APP_NAME})`
   }
@@ -336,10 +415,8 @@ const buttonAriaLabel = (status: DictateButtonStatus) => {
   switch (status) {
     case 'idle':
       return `Start dictation (${APP_NAME})`
-    case 'recording':
-      return `Dictation in progress. Click to stop it (${APP_NAME})`
-    case 'processing':
-      return `Processing dictation. Click to cancel it (${APP_NAME})`
+    case 'transcribing':
+      return `Transcribing. Click to stop (${APP_NAME})`
     case 'error':
       return `Dictation error. Click to reset (${APP_NAME})`
   }
@@ -386,31 +463,6 @@ const RecordingIcon = () => (
     aria-hidden="true"
   >
     <circle cx="12" cy="12" r="10" />
-  </svg>
-)
-
-const ProcessingIcon = () => (
-  <svg
-    // @ts-ignore
-    part="icon"
-    class="dictate-button__icon dictate-button__icon--processing"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-    role="img"
-    aria-hidden="true"
-  >
-    <path d="M12 2v4" />
-    <path d="m16.2 7.8 2.9-2.9" />
-    <path d="M18 12h4" />
-    <path d="m16.2 16.2 2.9 2.9" />
-    <path d="M12 18v4" />
-    <path d="m4.9 19.1 2.9-2.9" />
-    <path d="M2 12h4" />
-    <path d="m4.9 4.9 2.9 2.9" />
   </svg>
 )
 
