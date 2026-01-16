@@ -55,6 +55,7 @@ if (!customElements.get('dictate-button')) {
       let lastTranscript = ''
       let accumulatedTranscript = '' // Accumulate across turns
       let currentTurnOrder = -1
+      let currentInterim = '' // Current interim transcript (not yet final)
 
       // Audio processing variables
       let audioCtx: AudioContext | null = null
@@ -138,6 +139,7 @@ if (!customElements.get('dictate-button')) {
         lastTranscript = ''
         accumulatedTranscript = ''
         currentTurnOrder = -1
+        currentInterim = ''
 
         // Clean up audio context
         running = false
@@ -160,6 +162,7 @@ if (!customElements.get('dictate-button')) {
         lastTranscript = ''
         accumulatedTranscript = ''
         currentTurnOrder = -1
+        currentInterim = ''
 
         try {
           // Get microphone access
@@ -231,37 +234,88 @@ if (!customElements.get('dictate-button')) {
               const msg = JSON.parse(evt.data)
               console.debug('[dictate-button] Received message:', msg.type)
 
-              if (msg.type === 'transcript' && msg.text) {
+              if (msg.type === 'interim_transcript' && msg.text) {
+                // Update current interim (these are NOT final, they get replaced)
+                currentInterim = msg.text
+
+                console.debug('[dictate-button] Interim:', {
+                  interim_preview: currentInterim.substring(0, 30),
+                  accumulated_length: accumulatedTranscript.length,
+                  last_length: lastTranscript.length,
+                  interim_length: currentInterim.length,
+                })
+
+                // Display: accumulated finals + last final + current interim
+                const displayText = [
+                  accumulatedTranscript,
+                  lastTranscript,
+                  currentInterim
+                ].filter(Boolean).join(' ')
+
+                console.debug('[dictate-button] Interim display:', displayText.substring(0, 100))
+                event(element, 'dictate-text', displayText)
+              } else if (msg.type === 'transcript' && msg.text) {
                 const turnOrder = msg.turn_order ?? 0
                 const currentTurnText = msg.text
 
-                console.debug('[dictate-button] Received transcript:', {
+                console.debug('[dictate-button] Final transcript:', {
                   turn_order: turnOrder,
+                  current_turn: currentTurnOrder,
                   end_of_turn: msg.end_of_turn,
                   text_length: currentTurnText.length,
-                  text_preview: currentTurnText.substring(0, 30)
+                  text_preview: currentTurnText.substring(0, 50),
+                  accumulated_length: accumulatedTranscript.length,
+                  last_length: lastTranscript.length,
                 })
+
+                // Clear interim since we got a final
+                currentInterim = ''
 
                 // Check if this is a new turn
                 if (turnOrder > currentTurnOrder) {
                   // New turn started - accumulate previous turn's text
+                  console.debug('[dictate-button] NEW TURN DETECTED!')
+                  console.debug('[dictate-button]   Before - accumulated:', accumulatedTranscript)
+                  console.debug('[dictate-button]   Before - lastTranscript:', lastTranscript)
+
                   if (lastTranscript) {
                     accumulatedTranscript = accumulatedTranscript
                       ? accumulatedTranscript + ' ' + lastTranscript
                       : lastTranscript
-                    console.debug('[dictate-button] New turn detected. Accumulated:', accumulatedTranscript.substring(0, 50))
                   }
+
+                  console.debug('[dictate-button]   After - accumulated:', accumulatedTranscript)
+                  console.debug('[dictate-button]   Setting lastTranscript to:', currentTurnText.substring(0, 50))
+
                   currentTurnOrder = turnOrder
                   lastTranscript = currentTurnText
                 } else {
-                  // Same turn - update current transcript
-                  lastTranscript = currentTurnText
+                  // Same turn - check if this is a refinement or new utterance
+                  const isRefinement = currentTurnText.length > lastTranscript.length &&
+                                       currentTurnText.startsWith(lastTranscript.substring(0, Math.min(10, lastTranscript.length)))
+
+                  if (isRefinement) {
+                    // This is a refinement (longer version of same text) - replace
+                    console.debug('[dictate-button] SAME TURN - refinement detected, replacing')
+                    console.debug('[dictate-button]   Old lastTranscript:', lastTranscript.substring(0, 50))
+                    console.debug('[dictate-button]   New lastTranscript:', currentTurnText.substring(0, 50))
+                    lastTranscript = currentTurnText
+                  } else {
+                    // This is a new utterance in the same turn - accumulate
+                    console.debug('[dictate-button] SAME TURN - new utterance, accumulating')
+                    console.debug('[dictate-button]   Old lastTranscript:', lastTranscript)
+                    console.debug('[dictate-button]   Adding:', currentTurnText)
+                    lastTranscript = lastTranscript ? lastTranscript + ' ' + currentTurnText : currentTurnText
+                    console.debug('[dictate-button]   New combined lastTranscript:', lastTranscript.substring(0, 100))
+                  }
                 }
 
-                // Send the combined text for display (accumulated + current)
+                // Send the combined text for display (accumulated + current final)
                 const displayText = accumulatedTranscript
                   ? accumulatedTranscript + ' ' + lastTranscript
                   : lastTranscript
+
+                console.debug('[dictate-button] Display text:', displayText.substring(0, 100))
                 event(element, 'dictate-text', displayText)
               } else if (msg.type === 'session_opened') {
                 console.debug('[dictate-button] Session opened:', msg.sessionId)
@@ -316,18 +370,40 @@ if (!customElements.get('dictate-button')) {
 
         running = false
 
-        // Emit final transcript (accumulated + last)
-        const finalTranscript = accumulatedTranscript
-          ? accumulatedTranscript + (lastTranscript ? ' ' + lastTranscript : '')
-          : lastTranscript
+        // Send close message to backend to trigger Finalize
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          console.debug('[dictate-button] Sending close message to backend')
+          ws.send(JSON.stringify({ type: 'close' }))
 
-        if (finalTranscript) {
-          console.debug('[dictate-button] Final transcript:', finalTranscript.substring(0, 100))
-          event(element, 'dictate-end', finalTranscript)
+          // Wait 0.5 seconds for final transcripts to arrive
+          setTimeout(() => {
+            // Emit final transcript (accumulated + last)
+            const finalTranscript = accumulatedTranscript
+              ? accumulatedTranscript + (lastTranscript ? ' ' + lastTranscript : '')
+              : lastTranscript
+
+            if (finalTranscript) {
+              console.debug('[dictate-button] Final transcript:', finalTranscript.substring(0, 100))
+              event(element, 'dictate-end', finalTranscript)
+            }
+
+            cleanup()
+            setStatus('idle')
+          }, 500)
+        } else {
+          // WebSocket not open, cleanup immediately
+          const finalTranscript = accumulatedTranscript
+            ? accumulatedTranscript + (lastTranscript ? ' ' + lastTranscript : '')
+            : lastTranscript
+
+          if (finalTranscript) {
+            console.debug('[dictate-button] Final transcript:', finalTranscript.substring(0, 100))
+            event(element, 'dictate-end', finalTranscript)
+          }
+
+          cleanup()
+          setStatus('idle')
         }
-
-        cleanup()
-        setStatus('idle')
       }
 
       const setErrorStatus = () => {
