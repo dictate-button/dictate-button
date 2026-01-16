@@ -2,7 +2,7 @@ import { customElement } from 'solid-element'
 import { createEffect, createSignal, onCleanup } from 'solid-js'
 import { dictateButtonStyles } from './dictate-button.styles'
 
-console.debug('dictate-button version:', __APP_VERSION__)
+console.debug('[dictate-button] version:', __APP_VERSION__)
 
 export interface DictateButtonProps {
   size?: number
@@ -45,7 +45,7 @@ if (!customElements.get('dictate-button')) {
       language: undefined,
     },
     (props: DictateButtonProps, { element }) => {
-      console.debug('api', props.apiEndpoint)
+      console.debug('[dictate-button] api:', props.apiEndpoint)
 
       const [status, setStatus] = createSignal<DictateButtonStatus>('idle')
 
@@ -208,7 +208,9 @@ if (!customElements.get('dictate-button')) {
             }
             registerProcessor('pcm-processor', PcmProcessor)
           `
-          const workletBlob = new Blob([workletCode], { type: 'application/javascript' })
+          const workletBlob = new Blob([workletCode], {
+            type: 'application/javascript',
+          })
           const workletUrl = URL.createObjectURL(workletBlob)
 
           // Load and set up AudioWorklet for PCM capture
@@ -223,50 +225,28 @@ if (!customElements.get('dictate-button')) {
             wsUrl.searchParams.set('language', props.language)
           }
           ws = new WebSocket(wsUrl.toString())
-          console.debug('[dictate-button] Connecting with language:', props.language || 'en')
-
-          ws.onopen = () => {
-            console.debug('[dictate-button] WebSocket connected')
-          }
 
           ws.onmessage = (evt) => {
             try {
               const msg = JSON.parse(evt.data)
-              console.debug('[dictate-button] Received message:', msg.type)
 
               if (msg.type === 'interim_transcript' && msg.text) {
                 // Update current interim (these are NOT final, they get replaced)
                 currentInterim = msg.text
 
-                console.debug('[dictate-button] Interim:', {
-                  interim_preview: currentInterim.substring(0, 30),
-                  accumulated_length: accumulatedTranscript.length,
-                  last_length: lastTranscript.length,
-                  interim_length: currentInterim.length,
-                })
-
                 // Display: accumulated finals + last final + current interim
                 const displayText = [
                   accumulatedTranscript,
                   lastTranscript,
-                  currentInterim
-                ].filter(Boolean).join(' ')
+                  currentInterim,
+                ]
+                  .filter(Boolean)
+                  .join(' ')
 
-                console.debug('[dictate-button] Interim display:', displayText.substring(0, 100))
                 event(element, 'dictate-text', displayText)
               } else if (msg.type === 'transcript' && msg.text) {
                 const turnOrder = msg.turn_order ?? 0
                 const currentTurnText = msg.text
-
-                console.debug('[dictate-button] Final transcript:', {
-                  turn_order: turnOrder,
-                  current_turn: currentTurnOrder,
-                  end_of_turn: msg.end_of_turn,
-                  text_length: currentTurnText.length,
-                  text_preview: currentTurnText.substring(0, 50),
-                  accumulated_length: accumulatedTranscript.length,
-                  last_length: lastTranscript.length,
-                })
 
                 // Clear interim since we got a final
                 currentInterim = ''
@@ -274,39 +254,33 @@ if (!customElements.get('dictate-button')) {
                 // Check if this is a new turn
                 if (turnOrder > currentTurnOrder) {
                   // New turn started - accumulate previous turn's text
-                  console.debug('[dictate-button] NEW TURN DETECTED!')
-                  console.debug('[dictate-button]   Before - accumulated:', accumulatedTranscript)
-                  console.debug('[dictate-button]   Before - lastTranscript:', lastTranscript)
-
                   if (lastTranscript) {
                     accumulatedTranscript = accumulatedTranscript
                       ? accumulatedTranscript + ' ' + lastTranscript
                       : lastTranscript
                   }
 
-                  console.debug('[dictate-button]   After - accumulated:', accumulatedTranscript)
-                  console.debug('[dictate-button]   Setting lastTranscript to:', currentTurnText.substring(0, 50))
-
                   currentTurnOrder = turnOrder
                   lastTranscript = currentTurnText
                 } else {
                   // Same turn - check if this is a refinement or new utterance
-                  const isRefinement = currentTurnText.length > lastTranscript.length &&
-                                       currentTurnText.startsWith(lastTranscript.substring(0, Math.min(10, lastTranscript.length)))
+                  const isRefinement =
+                    currentTurnText.length > lastTranscript.length &&
+                    currentTurnText.startsWith(
+                      lastTranscript.substring(
+                        0,
+                        Math.min(10, lastTranscript.length)
+                      )
+                    )
 
                   if (isRefinement) {
                     // This is a refinement (longer version of same text) - replace
-                    console.debug('[dictate-button] SAME TURN - refinement detected, replacing')
-                    console.debug('[dictate-button]   Old lastTranscript:', lastTranscript.substring(0, 50))
-                    console.debug('[dictate-button]   New lastTranscript:', currentTurnText.substring(0, 50))
                     lastTranscript = currentTurnText
                   } else {
                     // This is a new utterance in the same turn - accumulate
-                    console.debug('[dictate-button] SAME TURN - new utterance, accumulating')
-                    console.debug('[dictate-button]   Old lastTranscript:', lastTranscript)
-                    console.debug('[dictate-button]   Adding:', currentTurnText)
-                    lastTranscript = lastTranscript ? lastTranscript + ' ' + currentTurnText : currentTurnText
-                    console.debug('[dictate-button]   New combined lastTranscript:', lastTranscript.substring(0, 100))
+                    lastTranscript = lastTranscript
+                      ? lastTranscript + ' ' + currentTurnText
+                      : currentTurnText
                   }
                 }
 
@@ -315,12 +289,7 @@ if (!customElements.get('dictate-button')) {
                   ? accumulatedTranscript + ' ' + lastTranscript
                   : lastTranscript
 
-                console.debug('[dictate-button] Display text:', displayText.substring(0, 100))
                 event(element, 'dictate-text', displayText)
-              } else if (msg.type === 'session_opened') {
-                console.debug('[dictate-button] Session opened:', msg.sessionId)
-              } else if (msg.type === 'session_closed') {
-                console.debug('[dictate-button] Session closed:', msg.code, msg.reason)
               } else if (msg.type === 'error') {
                 console.error('[dictate-button] Server error:', msg.error)
                 event(element, 'dictate-error', msg.error)
@@ -339,8 +308,8 @@ if (!customElements.get('dictate-button')) {
             cleanup()
           }
 
-          ws.onclose = (evt) => {
-            console.debug('[dictate-button] WebSocket closed. Code:', evt.code, 'Reason:', evt.reason)
+          ws.onclose = () => {
+            // WebSocket closed
           }
 
           // Stream PCM data to WebSocket when available
@@ -372,18 +341,17 @@ if (!customElements.get('dictate-button')) {
 
         // Send close message to backend to trigger Finalize
         if (ws && ws.readyState === WebSocket.OPEN) {
-          console.debug('[dictate-button] Sending close message to backend')
           ws.send(JSON.stringify({ type: 'close' }))
 
           // Wait 0.5 seconds for final transcripts to arrive
           setTimeout(() => {
             // Emit final transcript (accumulated + last)
             const finalTranscript = accumulatedTranscript
-              ? accumulatedTranscript + (lastTranscript ? ' ' + lastTranscript : '')
+              ? accumulatedTranscript +
+                (lastTranscript ? ' ' + lastTranscript : '')
               : lastTranscript
 
             if (finalTranscript) {
-              console.debug('[dictate-button] Final transcript:', finalTranscript.substring(0, 100))
               event(element, 'dictate-end', finalTranscript)
             }
 
@@ -393,11 +361,11 @@ if (!customElements.get('dictate-button')) {
         } else {
           // WebSocket not open, cleanup immediately
           const finalTranscript = accumulatedTranscript
-            ? accumulatedTranscript + (lastTranscript ? ' ' + lastTranscript : '')
+            ? accumulatedTranscript +
+              (lastTranscript ? ' ' + lastTranscript : '')
             : lastTranscript
 
           if (finalTranscript) {
-            console.debug('[dictate-button] Final transcript:', finalTranscript.substring(0, 100))
             event(element, 'dictate-end', finalTranscript)
           }
 
@@ -472,7 +440,7 @@ if (!customElements.get('dictate-button')) {
   )
 } else {
   console.debug(
-    `dictate-button: We don't require importing the dictate-button component separately anymore, so you may remove the script tag which imports https://cdn.dictate-button.io/dictate-button.js from the HTML head.`
+    `[dictate-button] We don't require importing the dictate-button component separately anymore, so you may remove the script tag which imports https://cdn.dictate-button.io/dictate-button.js from the HTML head.`
   )
 }
 
