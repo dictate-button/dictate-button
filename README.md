@@ -207,22 +207,26 @@ dictate-button::part(icon) {
 
 ## API Endpoint
 
-By default, dictate-button uses the `https://api.dictate-button.io/transcribe` endpoint for speech-to-text conversion. 
+By default, dictate-button uses the `wss://api.dictate-button.io/v2/transcribe` endpoint for real-time speech-to-text streaming.
 You can specify your own endpoint by setting the `apiEndpoint` attribute.
 
-The API expects:
-- POST request
-- Multipart form data with the following fields:
-  - `audio`: Audio data as a File (audio/webm format)
-  - `origin`: The origin of the website (automatically added)
-  - `language`: Optional language code (if provided as an attribute)
-- Response should be JSON with a `text` property containing the transcribed text
+The API uses WebSocket for real-time transcription:
+- **Protocol**: WebSocket (wss://)
+- **Connection**: Opens WebSocket connection with optional language query parameter (e.g., `?language=en`)
+- **Audio Format**: PCM16 audio data at 16kHz sample rate, sent as binary chunks
+- **Messages Sent**: Binary audio data (Int16Array)
+- **Messages Received**: JSON messages with the following types:
+  - `{ type: 'session_opened', sessionId: string, expiresAt: number }` - Session started
+  - `{ type: 'transcript', text: string, end_of_turn: boolean, turn_order: number }` - Transcription updates
+  - `{ type: 'session_closed', code: number, reason: string }` - Session ended
+  - `{ type: 'error', error: string }` - Error occurred
 
 ## Browser Compatibility
 
 The dictate-button component requires the following browser features:
 - Web Components
-- MediaRecorder API
-- Fetch API
+- MediaStream API (getUserMedia)
+- Web Audio API (AudioContext, AudioWorklet)
+- WebSocket API
 
 Works in all modern browsers (Chrome, Firefox, Safari, Edge).

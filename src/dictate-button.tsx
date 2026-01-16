@@ -173,7 +173,7 @@ if (!customElements.get('dictate-button')) {
           })
           mediaStream = stream
 
-          // Set up audio context at 16kHz for AssemblyAI
+          // Set up audio context at 16kHz for streaming transcription
           audioCtx = new (window.AudioContext ||
             (window as any).webkitAudioContext)({ sampleRate: 16000 })
           const source = audioCtx.createMediaStreamSource(stream)
