@@ -21,7 +21,7 @@ declare module 'solid-js' {
   }
 }
 
-type DictateButtonStatus = 'idle' | 'transcribing' | 'error'
+type DictateButtonStatus = 'idle' | 'transcribing' | 'finalizing' | 'error'
 
 const DEFAULT_TRANSCRIBE_API_ENDPOINT =
   'wss://api.dictate-button.io/v2/transcribe'
@@ -338,6 +338,7 @@ if (!customElements.get('dictate-button')) {
         if (status() !== 'transcribing') return
 
         running = false
+        setStatus('finalizing')
 
         // Send close message to backend to trigger Finalize
         if (ws && ws.readyState === WebSocket.OPEN) {
@@ -428,10 +429,11 @@ if (!customElements.get('dictate-button')) {
             title={buttonTitle(status())}
             aria-label={buttonAriaLabel(status())}
             aria-pressed={status() === 'transcribing'}
-            aria-busy={status() === 'transcribing'}
+            aria-busy={status() === 'transcribing' || status() === 'finalizing'}
           >
             {status() === 'idle' && <IdleIcon />}
             {status() === 'transcribing' && <RecordingIcon />}
+            {status() === 'finalizing' && <FinalizingIcon />}
             {status() === 'error' && <ErrorIcon />}
           </button>
         </div>
@@ -450,6 +452,8 @@ const buttonTitle = (status: DictateButtonStatus) => {
       return `Start dictation (${APP_NAME})`
     case 'transcribing':
       return `Stop dictation (${APP_NAME})`
+    case 'finalizing':
+      return `Finalizing dictation (${APP_NAME})`
     case 'error':
       return `Click to reset (${APP_NAME})`
   }
@@ -461,6 +465,8 @@ const buttonAriaLabel = (status: DictateButtonStatus) => {
       return `Start dictation (${APP_NAME})`
     case 'transcribing':
       return `Transcribing. Click to stop (${APP_NAME})`
+    case 'finalizing':
+      return `Finalizing dictation. Please wait (${APP_NAME})`
     case 'error':
       return `Dictation error. Click to reset (${APP_NAME})`
   }
@@ -526,6 +532,31 @@ const ErrorIcon = () => (
   >
     <line x1="12" x2="12" y1="4" y2="14" />
     <line x1="12" x2="12.01" y1="20" y2="20" />
+  </svg>
+)
+
+const FinalizingIcon = () => (
+  <svg
+    // @ts-ignore
+    part="icon"
+    class="dictate-button__icon dictate-button__icon--processing"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    role="img"
+    aria-hidden="true"
+  >
+    <path d="M12 2v4" />
+    <path d="M12 18v4" />
+    <path d="M4.93 4.93l2.83 2.83" />
+    <path d="M16.24 16.24l2.83 2.83" />
+    <path d="M2 12h4" />
+    <path d="M18 12h4" />
+    <path d="M4.93 19.07l2.83-2.83" />
+    <path d="M16.24 7.76l2.83-2.83" />
   </svg>
 )
 
