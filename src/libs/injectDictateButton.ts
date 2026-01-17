@@ -120,7 +120,8 @@ export function injectDictateButton(
       const text = (e as CustomEvent<string>).detail
       if (typeof text === 'string' && insertionStart !== null) {
         updatePartialText(textField, text, insertionStart, lastPartialLength)
-        lastPartialLength = text.length + (needsLeadingSpace(textField, insertionStart) ? 1 : 0)
+        lastPartialLength =
+          text.length + (needsLeadingSpace(textField, insertionStart) ? 1 : 0)
       }
     })
     dictateBtn.addEventListener('dictate-end', (e) => {
@@ -218,7 +219,8 @@ function needsLeadingSpace(
   textField: HTMLInputElement | HTMLTextAreaElement,
   insertionStart: number
 ): boolean {
-  const prevChar = insertionStart > 0 ? textField.value.charAt(insertionStart - 1) : ''
+  const prevChar =
+    insertionStart > 0 ? textField.value.charAt(insertionStart - 1) : ''
   return prevChar !== '' && !/\s/.test(prevChar)
 }
 
@@ -240,7 +242,8 @@ function updatePartialText(
   const replaceEnd = insertionStart + previousLength
 
   // Replace the previous partial text with the new one
-  const prevScrollTop = typeof textField.scrollTop === 'number' ? textField.scrollTop : null
+  const prevScrollTop =
+    typeof textField.scrollTop === 'number' ? textField.scrollTop : null
 
   if (typeof textField.setRangeText === 'function') {
     textField.setRangeText(formattedText, replaceStart, replaceEnd, 'end')
