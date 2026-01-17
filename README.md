@@ -90,7 +90,7 @@ Import the component and use it directly in your code:
 ```html
 <script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
 
-<dictate-button size="30" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
+<dictate-button size="30" api-endpoint="wss://api.dictate-button.io/v2/transcribe" language="en"></dictate-button>
 ```
 
 ### From NPM
@@ -123,7 +123,7 @@ injectDictateButton(
   {
     buttonSize: 30,           // Button size in pixels (optional; default: 30)
     verbose: false,           // Log events to console (optional; default: false)
-    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
+    apiEndpoint: 'wss://api.example.com/transcribe' // Optional custom API endpoint
   }
 )
 
@@ -133,7 +133,7 @@ injectDictateButtonOnLoad(
   {
     buttonSize: 30,           // Button size in pixels (optional; default: 30)
     verbose: false,           // Log events to console (optional; default: false)
-    customApiEndpoint: 'https://api.example.com/transcribe', // Optional custom API endpoint
+    apiEndpoint: 'wss://api.example.com/transcribe', // Optional custom API endpoint
     watchDomChanges: true     // Watch for DOM changes (optional; default: false)
   }
 )
@@ -176,13 +176,13 @@ dictateButton.addEventListener('transcribing:finished', (event) => {
 
 ## Attributes
 
-| Attribute     | Type    | Default                                 | Description                            |
-|---------------|---------|-----------------------------------------|----------------------------------------|
-| size          | number  | 30                                      | Size of the button in pixels           |
-| apiEndpoint   | string  | https://api.dictate-button.io/transcribe| API endpoint for transcription service |
-| language      | string  | (not set)                               | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
-| theme         | string  | (inherits from page)                    | 'light' or 'dark'                      |
-| class         | string  |                                         | Custom CSS class                       |
+| Attribute     | Type    | Default                                    | Description                            |
+|---------------|---------|--------------------------------------------|-----------------------------------------|
+| size          | number  | 30                                         | Size of the button in pixels           |
+| apiEndpoint   | string  | wss://api.dictate-button.io/v2/transcribe  | WebSockets API endpoint of transcription service |
+| language      | string  | (not set)                                  | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
+| theme         | string  | (inherits from page)                       | 'light' or 'dark'                      |
+| class         | string  |                                            | Custom CSS class                       |
 
 ## Styling
 
