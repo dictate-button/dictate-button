@@ -180,7 +180,7 @@ dictateButton.addEventListener('transcribing:finished', (event) => {
 |---------------|---------|--------------------------------------------|-----------------------------------------|
 | size          | number  | 30                                         | Size of the button in pixels           |
 | apiEndpoint   | string  | wss://api.dictate-button.io/v2/transcribe  | WebSockets API endpoint of transcription service |
-| language      | string  | (not set)                                  | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
+| language      | string  | (not set)                                  | Optional language code (e.g., 'en', 'fr', 'de') |
 | theme         | string  | (inherits from page)                       | 'light' or 'dark'                      |
 | class         | string  |                                            | Custom CSS class                       |
 
