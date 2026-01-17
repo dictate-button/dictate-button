@@ -12,6 +12,7 @@ export default defineConfig({
     solidPlugin(),
     dts({
       insertTypesEntry: true,
+      exclude: ['**/*.test.*', '**/*.spec.*'],
     }),
     viteStaticCopy({
       targets: [
