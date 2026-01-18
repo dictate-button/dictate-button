@@ -60,9 +60,7 @@ describe('dictate-button smoke test', () => {
     element.apiEndpoint = 'wss://custom-api.example.com/transcribe'
     document.body.appendChild(element)
 
-    expect(element.apiEndpoint).toBe(
-      'wss://custom-api.example.com/transcribe'
-    )
+    expect(element.apiEndpoint).toBe('wss://custom-api.example.com/transcribe')
   })
 
   it('should accept language attribute', () => {
