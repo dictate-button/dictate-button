@@ -15,8 +15,8 @@ export interface InjectDictateButtonOptions {
   buttonSize?: number
   /** Whether to log events to console */
   verbose?: boolean
-  /** Optional custom API endpoint */
-  customApiEndpoint?: string
+  /** Optional API endpoint */
+  apiEndpoint?: string
 }
 
 /**
@@ -31,7 +31,7 @@ export function injectDictateButton(
   textFieldSelector: string,
   options: InjectDictateButtonOptions = {}
 ) {
-  const { buttonSize = 30, verbose = false, customApiEndpoint } = options
+  const { buttonSize = 30, verbose = false, apiEndpoint } = options
 
   const textFields = document.querySelectorAll<
     HTMLInputElement | HTMLTextAreaElement
@@ -96,35 +96,50 @@ export function injectDictateButton(
     dictateBtn.style.marginTop = '0'
     dictateBtn.style.marginBottom = '0'
 
-    if (customApiEndpoint) {
-      dictateBtn.apiEndpoint = customApiEndpoint
+    if (apiEndpoint) {
+      dictateBtn.apiEndpoint = apiEndpoint
     }
 
     // Set the normalized document language as the dictate-button component's language if set.
     dictateBtn.language = getDocumentLanguage()
 
+    // Track insertion state for partial results
+    let insertionStart: number | null = null
+    let lastPartialLength = 0
+
     // Add event listeners for the dictate-button component.
-    dictateBtn.addEventListener('recording:started', (e) => {
-      verbose && console.debug('recording:started', e)
-    })
-    dictateBtn.addEventListener('recording:stopped', (e) => {
-      verbose && console.debug('recording:stopped', e)
-    })
-    dictateBtn.addEventListener('recording:failed', (e) => {
-      verbose && console.debug('recording:failed', e)
+    dictateBtn.addEventListener('dictate-start', (e) => {
+      verbose && console.debug('dictate-start', e)
+      // Record cursor position at start of transcription
+      insertionStart = textField.selectionStart ?? textField.value.length
+      lastPartialLength = 0
       focusOnTextField(textField)
     })
-
-    dictateBtn.addEventListener('transcribing:started', (e) => {
-      verbose && console.debug('transcribing:started', e)
-    })
-    dictateBtn.addEventListener('transcribing:finished', (e) => {
-      verbose && console.debug('transcribing:finished', e)
+    dictateBtn.addEventListener('dictate-text', (e) => {
+      verbose && console.debug('dictate-text', e)
       const text = (e as CustomEvent<string>).detail
+      if (typeof text === 'string' && insertionStart !== null) {
+        updatePartialText(textField, text, insertionStart, lastPartialLength)
+        lastPartialLength =
+          text.length + (needsLeadingSpace(textField, insertionStart) ? 1 : 0)
+      }
+    })
+    dictateBtn.addEventListener('dictate-end', (e) => {
+      verbose && console.debug('dictate-end', e)
+      const text = (e as CustomEvent<string>).detail
+      // Clear partial text first, then insert final with proper formatting
+      if (insertionStart !== null && lastPartialLength > 0) {
+        clearPartialText(textField, insertionStart, lastPartialLength)
+      }
+      insertionStart = null
+      lastPartialLength = 0
+      // Use receiveText for final insertion with proper whitespace handling
       receiveText(textField, text)
     })
-    dictateBtn.addEventListener('transcribing:failed', (e) => {
-      verbose && console.debug('transcribing:failed', e)
+    dictateBtn.addEventListener('dictate-error', (e) => {
+      verbose && console.debug('dictate-error', e)
+      insertionStart = null
+      lastPartialLength = 0
       focusOnTextField(textField)
     })
 
@@ -197,6 +212,79 @@ function focusOnTextField(textField: HTMLElement) {
     textField.focus({ preventScroll: true })
   } catch (_) {
     textField.focus()
+  }
+}
+
+function needsLeadingSpace(
+  textField: HTMLInputElement | HTMLTextAreaElement,
+  insertionStart: number
+): boolean {
+  const prevChar =
+    insertionStart > 0 ? textField.value.charAt(insertionStart - 1) : ''
+  return prevChar !== '' && !/\s/.test(prevChar)
+}
+
+function updatePartialText(
+  textField: HTMLInputElement | HTMLTextAreaElement,
+  text: string,
+  insertionStart: number,
+  previousLength: number
+) {
+  const textToInsert = text.trim()
+  if (textToInsert.length === 0 && previousLength === 0) return
+
+  // Add leading space if needed
+  const addLeadingSpace = needsLeadingSpace(textField, insertionStart)
+  const formattedText = (addLeadingSpace ? ' ' : '') + textToInsert
+
+  // Calculate the range to replace (previous partial text)
+  const replaceStart = insertionStart
+  const replaceEnd = insertionStart + previousLength
+
+  // Replace the previous partial text with the new one
+  const prevScrollTop =
+    typeof textField.scrollTop === 'number' ? textField.scrollTop : null
+
+  if (typeof textField.setRangeText === 'function') {
+    textField.setRangeText(formattedText, replaceStart, replaceEnd, 'end')
+  } else {
+    textField.value =
+      textField.value.substring(0, replaceStart) +
+      formattedText +
+      textField.value.substring(replaceEnd)
+    try {
+      const newPos = replaceStart + formattedText.length
+      textField.selectionStart = newPos
+      textField.selectionEnd = newPos
+    } catch (_) {
+      // Some inputs may not support selection
+    }
+  }
+
+  if (prevScrollTop !== null) {
+    textField.scrollTop = prevScrollTop
+  }
+}
+
+function clearPartialText(
+  textField: HTMLInputElement | HTMLTextAreaElement,
+  insertionStart: number,
+  length: number
+) {
+  if (length <= 0) return
+
+  if (typeof textField.setRangeText === 'function') {
+    textField.setRangeText('', insertionStart, insertionStart + length, 'end')
+  } else {
+    textField.value =
+      textField.value.substring(0, insertionStart) +
+      textField.value.substring(insertionStart + length)
+    try {
+      textField.selectionStart = insertionStart
+      textField.selectionEnd = insertionStart
+    } catch (_) {
+      // Some inputs may not support selection
+    }
   }
 }
 

@@ -90,7 +90,7 @@ Import the component and use it directly in your code:
 ```html
 <script type="module" crossorigin src="https://cdn.dictate-button.io/dictate-button.js"></script>
 
-<dictate-button size="30" api-endpoint="https://api.dictate-button.io/transcribe" language="en"></dictate-button>
+<dictate-button size="30" api-endpoint="wss://api.dictate-button.io/v2/transcribe" language="en"></dictate-button>
 ```
 
 ### From NPM
@@ -123,7 +123,7 @@ injectDictateButton(
   {
     buttonSize: 30,           // Button size in pixels (optional; default: 30)
     verbose: false,           // Log events to console (optional; default: false)
-    customApiEndpoint: 'https://api.example.com/transcribe' // Optional custom API endpoint
+    apiEndpoint: 'wss://api.example.com/transcribe' // Optional custom API endpoint
   }
 )
 
@@ -133,7 +133,7 @@ injectDictateButtonOnLoad(
   {
     buttonSize: 30,           // Button size in pixels (optional; default: 30)
     verbose: false,           // Log events to console (optional; default: false)
-    customApiEndpoint: 'https://api.example.com/transcribe', // Optional custom API endpoint
+    apiEndpoint: 'wss://api.example.com/transcribe', // Optional custom API endpoint
     watchDomChanges: true     // Watch for DOM changes (optional; default: false)
   }
 )
@@ -147,42 +147,55 @@ The wrapper also has the `dictate-button-wrapper` class for easy styling.
 
 The dictate-button component emits the following events:
 
-- `recording:started`: Fired when user starts recording.
-- `recording:stopped`: Fired when user stops recording.
-- `recording:failed`: Fired when an error occurs during recording.
-- `transcribing:started`: Fired when transcribing is started.
-- `transcribing:finished`: Fired when transcribing is complete. The event detail contains the transcribed text.
-- `transcribing:failed`: Fired when an error occurs during transcribing.
+- `dictate-start`: Fired when transcription starts (after microphone access is granted and WebSocket connection is established).
+- `dictate-text`: Fired during transcription when text is available. This includes both interim (partial) transcripts that may change and final transcripts. The event detail contains the current transcribed text.
+- `dictate-end`: Fired when transcription ends. The event detail contains the final transcribed text.
+- `dictate-error`: Fired when an error occurs (microphone access denied, WebSocket connection failure, server error, etc.). The event detail contains the error message.
 
-The ideal scenario is when user first starts recording (`recording:started`), then stops recording (`recording:stopped`), then the recorded audio is sent to the server for processing (`transcribing:started`), and finally the transcribed text is received (`transcribing:finished`).
+The typical flow is:
 
-> recording:started -> recording:stopped -> transcribing:started -> transcribing:finished
+> dictate-start -> dictate-text (multiple times) -> dictate-end
 
-In case of an error in recording or transcribing, the `recording:failed` or `transcribing:failed` event is fired, respectively.
+In case of an error, the `dictate-error` event is fired.
 
 Example event handling:
 
 ```javascript
 const dictateButton = document.querySelector('dictate-button');
 
-dictateButton.addEventListener('transcribing:finished', (event) => {
-  const transcribedText = event.detail;
-  console.log('Transcribed text:', transcribedText);
-  
-  // Add the text to your input field
-  document.querySelector('#my-input').value += transcribedText;
+dictateButton.addEventListener('dictate-start', () => {
+  console.log('Transcription started');
+});
+
+dictateButton.addEventListener('dictate-text', (event) => {
+  const currentText = event.detail;
+  console.log('Current text:', currentText);
+  // Update UI with interim/partial transcription
+});
+
+dictateButton.addEventListener('dictate-end', (event) => {
+  const finalText = event.detail;
+  console.log('Final transcribed text:', finalText);
+
+  // Add the final text to your input field
+  document.querySelector('#my-input').value += finalText;
+});
+
+dictateButton.addEventListener('dictate-error', (event) => {
+  const error = event.detail;
+  console.error('Transcription error:', error);
 });
 ```
 
 ## Attributes
 
-| Attribute     | Type    | Default                                 | Description                            |
-|---------------|---------|-----------------------------------------|----------------------------------------|
-| size          | number  | 30                                      | Size of the button in pixels           |
-| apiEndpoint   | string  | https://api.dictate-button.io/transcribe| API endpoint for transcription service |
-| language      | string  | (not set)                               | Optional language code (e.g., 'en', 'fr', 'de') which may speed up the transcription. |
-| theme         | string  | (inherits from page)                    | 'light' or 'dark'                      |
-| class         | string  |                                         | Custom CSS class                       |
+| Attribute     | Type    | Default                                    | Description                            |
+|---------------|---------|--------------------------------------------|-----------------------------------------|
+| size          | number  | 30                                         | Size of the button in pixels           |
+| apiEndpoint   | string  | wss://api.dictate-button.io/v2/transcribe  | WebSockets API endpoint of transcription service |
+| language      | string  | en                                         | Optional [language](https://github.com/dictate-button/dictate-button/wiki/Supported-Languages-and-Dialects) code (e.g., 'fr', 'de') |
+| theme         | string  | (inherits from page)                       | 'light' or 'dark'                      |
+| class         | string  |                                            | Custom CSS class                       |
 
 ## Styling
 
@@ -207,22 +220,29 @@ dictate-button::part(icon) {
 
 ## API Endpoint
 
-By default, dictate-button uses the `https://api.dictate-button.io/transcribe` endpoint for speech-to-text conversion. 
+By default, dictate-button uses the `wss://api.dictate-button.io/v2/transcribe` endpoint for real-time speech-to-text streaming.
 You can specify your own endpoint by setting the `apiEndpoint` attribute.
 
-The API expects:
-- POST request
-- Multipart form data with the following fields:
-  - `audio`: Audio data as a File (audio/webm format)
-  - `origin`: The origin of the website (automatically added)
-  - `language`: Optional language code (if provided as an attribute)
-- Response should be JSON with a `text` property containing the transcribed text
+The API uses WebSocket for real-time transcription:
+- **Protocol**: WebSocket (wss://)
+- **Connection**: Opens WebSocket connection with optional language query parameter (e.g., `?language=en`)
+- **Audio Format**: PCM16 audio data at 16kHz sample rate, sent as binary chunks
+- **Messages Sent**:
+  - Binary audio data (Int16Array buffers) - Continuous stream of PCM16 audio chunks
+  - `{ type: 'close' }` - JSON message to signal end of audio stream and trigger finalization
+- **Messages Received**: JSON messages with the following types:
+  - `{ type: 'session_opened', sessionId: string, expiresAt: number }` - Session started
+  - `{ type: 'interim_transcript', text: string }` - Interim (partial) transcription result that may change as more audio is processed
+  - `{ type: 'transcript', text: string, turn_order?: number }` - Final transcription result for the current turn
+  - `{ type: 'session_closed', code: number, reason: string }` - Session ended
+  - `{ type: 'error', error: string }` - Error occurred
 
 ## Browser Compatibility
 
 The dictate-button component requires the following browser features:
 - Web Components
-- MediaRecorder API
-- Fetch API
+- MediaStream API (getUserMedia)
+- Web Audio API (AudioContext, AudioWorklet)
+- WebSocket API
 
 Works in all modern browsers (Chrome, Firefox, Safari, Edge).
