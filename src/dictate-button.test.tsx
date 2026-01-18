@@ -57,11 +57,11 @@ describe('dictate-button smoke test', () => {
 
   it('should accept apiEndpoint attribute', () => {
     const element = document.createElement('dictate-button') as any
-    element.apiEndpoint = 'https://custom-api.example.com/transcribe'
+    element.apiEndpoint = 'wss://custom-api.example.com/transcribe'
     document.body.appendChild(element)
 
     expect(element.apiEndpoint).toBe(
-      'https://custom-api.example.com/transcribe'
+      'wss://custom-api.example.com/transcribe'
     )
   })
 
