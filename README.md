@@ -147,30 +147,43 @@ The wrapper also has the `dictate-button-wrapper` class for easy styling.
 
 The dictate-button component emits the following events:
 
-- `recording:started`: Fired when user starts recording.
-- `recording:stopped`: Fired when user stops recording.
-- `recording:failed`: Fired when an error occurs during recording.
-- `transcribing:started`: Fired when transcribing is started.
-- `transcribing:finished`: Fired when transcribing is complete. The event detail contains the transcribed text.
-- `transcribing:failed`: Fired when an error occurs during transcribing.
+- `dictate-start`: Fired when transcription starts (after microphone access is granted and WebSocket connection is established).
+- `dictate-text`: Fired during transcription when text is available. This includes both interim (partial) transcripts that may change and final transcripts. The event detail contains the current transcribed text.
+- `dictate-end`: Fired when transcription ends. The event detail contains the final transcribed text.
+- `dictate-error`: Fired when an error occurs (microphone access denied, WebSocket connection failure, server error, etc.). The event detail contains the error message.
 
-The ideal scenario is when user first starts recording (`recording:started`), then stops recording (`recording:stopped`), then the recorded audio is sent to the server for processing (`transcribing:started`), and finally the transcribed text is received (`transcribing:finished`).
+The typical flow is:
 
-> recording:started -> recording:stopped -> transcribing:started -> transcribing:finished
+> dictate-start -> dictate-text (multiple times) -> dictate-end
 
-In case of an error in recording or transcribing, the `recording:failed` or `transcribing:failed` event is fired, respectively.
+In case of an error, the `dictate-error` event is fired.
 
 Example event handling:
 
 ```javascript
 const dictateButton = document.querySelector('dictate-button');
 
-dictateButton.addEventListener('transcribing:finished', (event) => {
-  const transcribedText = event.detail;
-  console.log('Transcribed text:', transcribedText);
-  
-  // Add the text to your input field
-  document.querySelector('#my-input').value += transcribedText;
+dictateButton.addEventListener('dictate-start', () => {
+  console.log('Transcription started');
+});
+
+dictateButton.addEventListener('dictate-text', (event) => {
+  const currentText = event.detail;
+  console.log('Current text:', currentText);
+  // Update UI with interim/partial transcription
+});
+
+dictateButton.addEventListener('dictate-end', (event) => {
+  const finalText = event.detail;
+  console.log('Final transcribed text:', finalText);
+
+  // Add the final text to your input field
+  document.querySelector('#my-input').value += finalText;
+});
+
+dictateButton.addEventListener('dictate-error', (event) => {
+  const error = event.detail;
+  console.error('Transcription error:', error);
 });
 ```
 
