@@ -180,7 +180,7 @@ dictateButton.addEventListener('transcribing:finished', (event) => {
 |---------------|---------|--------------------------------------------|-----------------------------------------|
 | size          | number  | 30                                         | Size of the button in pixels           |
 | apiEndpoint   | string  | wss://api.dictate-button.io/v2/transcribe  | WebSockets API endpoint of transcription service |
-| language      | string  | (not set)                                  | Optional language code (e.g., 'en', 'fr', 'de') |
+| language      | string  | en                                         | Optional language code (e.g., 'en', 'fr', 'de') |
 | theme         | string  | (inherits from page)                       | 'light' or 'dark'                      |
 | class         | string  |                                            | Custom CSS class                       |
 
@@ -214,10 +214,13 @@ The API uses WebSocket for real-time transcription:
 - **Protocol**: WebSocket (wss://)
 - **Connection**: Opens WebSocket connection with optional language query parameter (e.g., `?language=en`)
 - **Audio Format**: PCM16 audio data at 16kHz sample rate, sent as binary chunks
-- **Messages Sent**: Binary audio data (Int16Array)
+- **Messages Sent**:
+  - Binary audio data (Int16Array buffers) - Continuous stream of PCM16 audio chunks
+  - `{ type: 'close' }` - JSON message to signal end of audio stream and trigger finalization
 - **Messages Received**: JSON messages with the following types:
   - `{ type: 'session_opened', sessionId: string, expiresAt: number }` - Session started
-  - `{ type: 'transcript', text: string, end_of_turn: boolean, turn_order: number }` - Transcription updates
+  - `{ type: 'interim_transcript', text: string }` - Interim (partial) transcription result that may change as more audio is processed
+  - `{ type: 'transcript', text: string, turn_order?: number }` - Final transcription result for the current turn
   - `{ type: 'session_closed', code: number, reason: string }` - Session ended
   - `{ type: 'error', error: string }` - Error occurred
 

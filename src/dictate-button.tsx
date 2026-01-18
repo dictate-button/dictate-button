@@ -42,7 +42,7 @@ if (!customElements.get('dictate-button')) {
     {
       size: 30,
       apiEndpoint: DEFAULT_TRANSCRIBE_API_ENDPOINT,
-      language: undefined,
+      language: 'en',
     },
     (props: DictateButtonProps, { element }) => {
       console.debug('[dictate-button] api:', props.apiEndpoint)
