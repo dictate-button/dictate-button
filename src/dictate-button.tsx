@@ -616,6 +616,12 @@ function addButtonEventListeners(
   const onPointerCancel = (e: PointerEvent) => {
     if (pressTimer) clearTimeout(pressTimer)
     element.releasePointerCapture(e.pointerId)
+
+    if (longPressTriggered) {
+      onLongPressEnd?.(e)
+      element.dispatchEvent(new CustomEvent('longpressend', { detail: e }))
+    }
+
     longPressTriggered = false
   }
 
