@@ -180,7 +180,7 @@ if (!customElements.get('dictate-button')) {
           // Get microphone access
           const stream = await navigator.mediaDevices.getUserMedia({
             audio: {
-              sampleRate: 16000,
+              sampleRate: { ideal: 16000 },
               channelCount: 1,
               echoCancellation: true,
               noiseSuppression: true,
@@ -188,10 +188,16 @@ if (!customElements.get('dictate-button')) {
           })
           mediaStream = stream
 
-          // Set up audio context at 16kHz for streaming transcription
+          // Get the actual sample rate from the audio track
+          const audioTrack = stream.getAudioTracks()[0]
+          const trackSettings = audioTrack.getSettings()
+          const actualSampleRate = trackSettings.sampleRate || 48000
+
+          // Set up audio context with the same sample rate as the MediaStream
+          // This prevents Firefox error: "Connecting AudioNodes from AudioContexts with different sample-rate"
           audioCtx = new (
             window.AudioContext || (window as any).webkitAudioContext
-          )({ sampleRate: 16000 })
+          )({ sampleRate: actualSampleRate })
           const source = audioCtx.createMediaStreamSource(stream)
 
           // Set up analyser for visual feedback
@@ -205,13 +211,39 @@ if (!customElements.get('dictate-button')) {
           // Create worklet module as Blob URL (portable, works from any origin)
           const workletCode = `
             class PcmProcessor extends AudioWorkletProcessor {
+              constructor(options) {
+                super()
+                this.inputSampleRate = options.processorOptions.inputSampleRate
+                this.outputSampleRate = 16000
+                this.ratio = this.inputSampleRate / this.outputSampleRate
+                this.buffer = []
+                this.bufferIndex = 0
+              }
+
               process(inputs) {
                 const input = inputs[0]
                 if (input.length > 0) {
                   const channelData = input[0]
-                  const pcm16 = new Int16Array(channelData.length)
-                  for (let i = 0; i < channelData.length; i++) {
-                    const s = Math.max(-1, Math.min(1, channelData[i]))
+
+                  // Resample to 16kHz if needed
+                  let resampledData
+                  if (this.ratio === 1) {
+                    // No resampling needed
+                    resampledData = channelData
+                  } else {
+                    // Simple decimation for downsampling
+                    const outputLength = Math.floor(channelData.length / this.ratio)
+                    resampledData = new Float32Array(outputLength)
+                    for (let i = 0; i < outputLength; i++) {
+                      const srcIndex = Math.floor(i * this.ratio)
+                      resampledData[i] = channelData[srcIndex]
+                    }
+                  }
+
+                  // Convert to PCM16
+                  const pcm16 = new Int16Array(resampledData.length)
+                  for (let i = 0; i < resampledData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, resampledData[i]))
                     pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff
                   }
                   this.port.postMessage(pcm16.buffer, [pcm16.buffer])
@@ -229,7 +261,9 @@ if (!customElements.get('dictate-button')) {
           // Load and set up AudioWorklet for PCM capture
           await audioCtx.audioWorklet.addModule(workletUrl)
           URL.revokeObjectURL(workletUrl)
-          workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor')
+          workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor', {
+            processorOptions: { inputSampleRate: actualSampleRate }
+          })
           source.connect(workletNode)
 
           // Connect to WebSocket with language parameter
