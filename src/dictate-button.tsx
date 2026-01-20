@@ -155,6 +155,18 @@ if (!customElements.get('dictate-button')) {
 
       element.addEventListener('disconnected', cleanup)
 
+      // Stop recording when user changes tab
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden' && status() === 'transcribing') {
+          stopTranscribing()
+        }
+      }
+
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+      onCleanup(() => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      })
+
       const startTranscribing = async (mode: 'short-tap' | 'long-press') => {
         if (status() !== 'idle') return
 
