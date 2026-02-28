@@ -27,6 +27,10 @@ const DEFAULT_TRANSCRIBE_API_ENDPOINT =
   'wss://api.dictate-button.io/v2/transcribe'
 const APP_NAME = 'dictate-button.io'
 
+// Connection health constants
+const HEARTBEAT_CHECK_INTERVAL = 2000 // ms between checks
+const HEARTBEAT_TIMEOUT = 7000 // ms without any server message before declaring connection lost
+
 // Audio analysis constants
 const MIN_DB = -70,
   MAX_DB = -10
@@ -56,6 +60,10 @@ if (!customElements.get('dictate-button')) {
       let accumulatedTranscript = '' // Accumulate across turns
       let currentTurnOrder = -1
       let currentInterim = '' // Current interim transcript (not yet final)
+
+      // Connection health monitoring
+      let lastMessageTime = 0
+      let heartbeatCheckInterval: ReturnType<typeof setInterval> | null = null
 
       // Audio processing variables
       let audioCtx: AudioContext | null = null
@@ -116,7 +124,33 @@ if (!customElements.get('dictate-button')) {
         requestAnimationFrame(rerenderRecordingIndication)
       }
 
+      const buildTranscript = () =>
+        [accumulatedTranscript, lastTranscript, currentInterim]
+          .filter(Boolean)
+          .join(' ')
+
+      const handleConnectionLost = () => {
+        if (status() !== 'transcribing') return
+
+        console.debug('[dictate-button] Connection lost')
+
+        const partialTranscript = buildTranscript()
+        if (partialTranscript) {
+          event(element, 'dictate-end', partialTranscript)
+        }
+
+        event(element, 'dictate-error', 'Connection lost')
+        setErrorStatus()
+        cleanup()
+      }
+
       const cleanup = () => {
+        // Clear heartbeat monitoring
+        if (heartbeatCheckInterval) {
+          clearInterval(heartbeatCheckInterval)
+          heartbeatCheckInterval = null
+        }
+
         // Close WebSocket connection
         if (ws) {
           ws.close()
@@ -131,7 +165,9 @@ if (!customElements.get('dictate-button')) {
 
         // Stop all media stream tracks to release the microphone.
         if (mediaStream) {
-          mediaStream.getTracks().forEach((track) => track.stop())
+          for (const track of mediaStream.getTracks()) {
+            track.stop()
+          }
           mediaStream = null
         }
 
@@ -157,14 +193,44 @@ if (!customElements.get('dictate-button')) {
 
       // Stop recording when user changes tab
       const handleVisibilityChange = () => {
-        if (document.visibilityState === 'hidden' && status() === 'transcribing') {
+        if (
+          document.visibilityState === 'hidden' &&
+          status() === 'transcribing'
+        ) {
           stopTranscribing()
         }
       }
 
       document.addEventListener('visibilitychange', handleVisibilityChange)
+
+      // Detect network loss instantly via offline event
+      const handleOffline = () => {
+        if (status() === 'transcribing') {
+          handleConnectionLost()
+        }
+      }
+      window.addEventListener('offline', handleOffline)
+
+      // Detect network type changes (e.g. WiFi → cellular handoff)
+      const handleConnectionChange = () => {
+        if (status() === 'transcribing') {
+          handleConnectionLost()
+        }
+      }
+      // biome-ignore lint/suspicious/noExplicitAny: NavigatorConnection is not in standard types yet
+      ;(navigator as any).connection?.addEventListener(
+        'change',
+        handleConnectionChange
+      )
+
       onCleanup(() => {
         document.removeEventListener('visibilitychange', handleVisibilityChange)
+        window.removeEventListener('offline', handleOffline)
+        // biome-ignore lint/suspicious/noExplicitAny: NavigatorConnection is not in standard types yet
+        ;(navigator as any).connection?.removeEventListener(
+          'change',
+          handleConnectionChange
+        )
       })
 
       const startTranscribing = async (mode: 'short-tap' | 'long-press') => {
@@ -196,8 +262,12 @@ if (!customElements.get('dictate-button')) {
           // Set up audio context with the same sample rate as the MediaStream
           // This prevents Firefox error: "Connecting AudioNodes from AudioContexts with different sample-rate"
           audioCtx = new (
-            window.AudioContext || (window as any).webkitAudioContext
-          )({ sampleRate: actualSampleRate })
+            window.AudioContext ||
+            // biome-ignore lint/suspicious/noExplicitAny: webkitAudioContext is a vendor prefix
+            (window as any).webkitAudioContext
+          )({
+            sampleRate: actualSampleRate,
+          })
           const source = audioCtx.createMediaStreamSource(stream)
 
           // Set up analyser for visual feedback
@@ -262,11 +332,12 @@ if (!customElements.get('dictate-button')) {
           await audioCtx.audioWorklet.addModule(workletUrl)
           URL.revokeObjectURL(workletUrl)
           workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor', {
-            processorOptions: { inputSampleRate: actualSampleRate }
+            processorOptions: { inputSampleRate: actualSampleRate },
           })
           source.connect(workletNode)
 
           // Connect to WebSocket with language parameter
+          // biome-ignore lint/style/noNonNullAssertion: apiEndpoint is set in customElement props with default value
           const wsUrl = new URL(props.apiEndpoint!)
           if (props.language) {
             wsUrl.searchParams.set('language', props.language)
@@ -274,8 +345,23 @@ if (!customElements.get('dictate-button')) {
           ws = new WebSocket(wsUrl.toString())
 
           ws.onmessage = (evt) => {
+            lastMessageTime = Date.now()
+
             try {
               const msg = JSON.parse(evt.data)
+
+              // Heartbeat — only resets the timer above, no further processing
+              if (msg.type === 'heartbeat') return
+
+              // Server detected a backend stall — treat as connection lost
+              if (msg.type === 'session_closed') {
+                console.debug(
+                  '[dictate-button] Session closed by server:',
+                  msg.reason
+                )
+                handleConnectionLost()
+                return
+              }
 
               if (msg.type === 'interim_transcript' && msg.text) {
                 // Update current interim (these are NOT final, they get replaced)
@@ -303,7 +389,7 @@ if (!customElements.get('dictate-button')) {
                   // New turn started - accumulate previous turn's text
                   if (lastTranscript) {
                     accumulatedTranscript = accumulatedTranscript
-                      ? accumulatedTranscript + ' ' + lastTranscript
+                      ? `${accumulatedTranscript} ${lastTranscript}`
                       : lastTranscript
                   }
 
@@ -326,14 +412,14 @@ if (!customElements.get('dictate-button')) {
                   } else {
                     // This is a new utterance in the same turn - accumulate
                     lastTranscript = lastTranscript
-                      ? lastTranscript + ' ' + currentTurnText
+                      ? `${lastTranscript} ${currentTurnText}`
                       : currentTurnText
                   }
                 }
 
                 // Send the combined text for display (accumulated + current final)
                 const displayText = accumulatedTranscript
-                  ? accumulatedTranscript + ' ' + lastTranscript
+                  ? `${accumulatedTranscript} ${lastTranscript}`
                   : lastTranscript
 
                 event(element, 'dictate-text', displayText)
@@ -372,6 +458,19 @@ if (!customElements.get('dictate-button')) {
           running = true
           rerenderRecordingIndication()
 
+          // Start heartbeat monitoring — detect silent connection death
+          lastMessageTime = Date.now()
+          heartbeatCheckInterval = setInterval(() => {
+            if (status() !== 'transcribing') return
+            const elapsed = Date.now() - lastMessageTime
+            if (elapsed > HEARTBEAT_TIMEOUT) {
+              console.debug(
+                `[dictate-button] No messages for ${elapsed}ms, connection lost`
+              )
+              handleConnectionLost()
+            }
+          }, HEARTBEAT_CHECK_INTERVAL)
+
           setStatus('transcribing')
         } catch (error) {
           console.error('[dictate-button] Failed to start:', error)
@@ -393,12 +492,7 @@ if (!customElements.get('dictate-button')) {
 
           // Wait 0.5 seconds for final transcripts to arrive
           setTimeout(() => {
-            // Emit final transcript (accumulated + last)
-            const finalTranscript = accumulatedTranscript
-              ? accumulatedTranscript +
-                (lastTranscript ? ' ' + lastTranscript : '')
-              : lastTranscript
-
+            const finalTranscript = buildTranscript()
             if (finalTranscript) {
               event(element, 'dictate-end', finalTranscript)
             }
@@ -408,11 +502,7 @@ if (!customElements.get('dictate-button')) {
           }, 500)
         } else {
           // WebSocket not open, cleanup immediately
-          const finalTranscript = accumulatedTranscript
-            ? accumulatedTranscript +
-              (lastTranscript ? ' ' + lastTranscript : '')
-            : lastTranscript
-
+          const finalTranscript = buildTranscript()
           if (finalTranscript) {
             event(element, 'dictate-end', finalTranscript)
           }
@@ -470,6 +560,7 @@ if (!customElements.get('dictate-button')) {
           </div>
           <button
             ref={buttonRef}
+            type="button"
             part="button"
             style={`width:${props.size}px;height:${props.size}px"`}
             class="dictate-button__button"
@@ -519,6 +610,7 @@ const buttonAriaLabel = (status: DictateButtonStatus) => {
   }
 }
 
+// biome-ignore lint/suspicious/noExplicitAny: ICustomElement doesn't extend EventTarget in types
 const event = (element: any, eventName: string, detail: string) => {
   element.dispatchEvent(
     new CustomEvent(eventName, {
@@ -531,7 +623,7 @@ const event = (element: any, eventName: string, detail: string) => {
 
 const IdleIcon = () => (
   <svg
-    // @ts-ignore
+    // @ts-expect-error
     part="icon"
     class={`dictate-button__icon dictate-button__icon--idle`}
     fill="none"
@@ -551,7 +643,7 @@ const IdleIcon = () => (
 
 const RecordingIcon = () => (
   <svg
-    // @ts-ignore
+    // @ts-expect-error
     part="icon"
     class="dictate-button__icon dictate-button__icon--recording"
     viewBox="0 0 24 24"
@@ -565,7 +657,7 @@ const RecordingIcon = () => (
 
 const ErrorIcon = () => (
   <svg
-    // @ts-ignore
+    // @ts-expect-error
     part="icon"
     class="dictate-button__icon dictate-button__icon--error"
     viewBox="0 0 24 24"
@@ -584,7 +676,7 @@ const ErrorIcon = () => (
 
 const FinalizingIcon = () => (
   <svg
-    // @ts-ignore
+    // @ts-expect-error
     part="icon"
     class="dictate-button__icon dictate-button__icon--processing"
     viewBox="0 0 24 24"
