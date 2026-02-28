@@ -1,12 +1,11 @@
-import {
-  injectDictateButton,
-  InjectDictateButtonOptions,
-} from './injectDictateButton'
+import type { InjectDictateButtonOptions } from './injectDictateButton'
+import { injectDictateButton } from './injectDictateButton'
 
 /**
  * Options for injecting the dictate button on load, extends the base options.
  */
-export interface InjectDictateButtonOnLoadOptions extends InjectDictateButtonOptions {
+export interface InjectDictateButtonOnLoadOptions
+  extends InjectDictateButtonOptions {
   /** Whether to watch for DOM changes and re-inject the component */
   watchDomChanges?: boolean
 }

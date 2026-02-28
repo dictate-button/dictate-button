@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import './dictate-button'
 
 describe('dictate-button smoke test', () => {
@@ -48,7 +48,9 @@ describe('dictate-button smoke test', () => {
   })
 
   it('should accept size attribute', () => {
-    const element = document.createElement('dictate-button') as any
+    const element = document.createElement('dictate-button') as HTMLElement & {
+      size?: number
+    }
     element.size = 50
     document.body.appendChild(element)
 
@@ -56,7 +58,9 @@ describe('dictate-button smoke test', () => {
   })
 
   it('should accept apiEndpoint attribute', () => {
-    const element = document.createElement('dictate-button') as any
+    const element = document.createElement('dictate-button') as HTMLElement & {
+      apiEndpoint?: string
+    }
     element.apiEndpoint = 'wss://custom-api.example.com/transcribe'
     document.body.appendChild(element)
 
@@ -64,7 +68,9 @@ describe('dictate-button smoke test', () => {
   })
 
   it('should accept language attribute', () => {
-    const element = document.createElement('dictate-button') as any
+    const element = document.createElement('dictate-button') as HTMLElement & {
+      language?: string
+    }
     element.language = 'en-US'
     document.body.appendChild(element)
 

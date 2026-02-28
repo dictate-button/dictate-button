@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
+import solidPlugin from 'vite-plugin-solid'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 import pkg from './package.json'
 

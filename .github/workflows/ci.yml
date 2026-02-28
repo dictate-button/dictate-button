@@ -1,4 +1,4 @@
-name: Tests
+name: CI
 
 on:
   push:
@@ -27,6 +27,15 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Run Biome check
+        run: pnpm check
+
+      - name: Run Biome lint
+        run: pnpm lint
+
+      - name: Run TypeScript typecheck
+        run: pnpm typecheck
 
       - name: Run tests
         run: pnpm test

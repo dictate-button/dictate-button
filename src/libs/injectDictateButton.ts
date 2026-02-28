@@ -85,13 +85,12 @@ export function injectDictateButton(
     dictateBtn.style.position = 'absolute'
     dictateBtn.style.right = '0'
 
-    dictateBtn.style.top =
-      calculateButtonPositionTop(
-        wrapper,
-        csField,
-        textField.tagName,
-        buttonSize
-      ) + 'px'
+    dictateBtn.style.top = `${calculateButtonPositionTop(
+      wrapper,
+      csField,
+      textField.tagName,
+      buttonSize
+    )}px`
     dictateBtn.style.marginRight = dictateBtn.style.marginLeft = `${marginX}px`
     dictateBtn.style.marginTop = '0'
     dictateBtn.style.marginBottom = '0'
@@ -152,6 +151,7 @@ function getDocumentLanguage(): string | undefined {
   if (lang && lang.length >= 2) {
     // Convert "en-US" → "en" with robust fallback when Intl.Locale is missing or lang is invalid.
     try {
+      // biome-ignore lint/suspicious/noExplicitAny: Intl.Locale is not in standard types yet
       const hasIntlLocale = (Intl as any)?.Locale
       const locale = hasIntlLocale ? new Intl.Locale(lang) : null
       return locale?.language ?? lang.split(/[-_]/)[0].toLowerCase()
